@@ -13,7 +13,12 @@ public class Main {
         System.out.print("$ ");
         Scanner scanner = new Scanner(System.in);
         String command = scanner.nextLine();
-        if (command.contains("exit"))
+        if (command.contains("type")) {
+            command = command
+                    .replace("type", "")
+                    .trim();
+            ValidCommand.isValidCommand(command);
+        } else if (command.contains("exit"))
             return false;
         else if (command.contains("echo")) {
             echo(command);
