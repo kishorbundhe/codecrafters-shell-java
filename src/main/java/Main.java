@@ -13,16 +13,13 @@ public class Main {
         System.out.print("$ ");
         Scanner scanner = new Scanner(System.in);
         String command = scanner.nextLine();
-        switch (command) {
-            case "exit":
-                return false;
-            case "echo":
-                System.out.println("echo " + command.substring(5));
-                break;
-            default:
-                break;
-        }
-        System.out.println(command + ": command not found");
+        if (command.contains("exit"))
+            return false;
+        else if (command.contains("echo"))
+            System.out.println("echo " + command.substring(5));
+        else
+            System.out.println(command + ": command not found");
+
         return true;
     }
 }
