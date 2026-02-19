@@ -13,11 +13,9 @@ public class Main {
         System.out.print("$ ");
         Scanner scanner = new Scanner(System.in);
         String command = scanner.nextLine();
+
         if (command.contains("type")) {
-            command = command
-                    .replaceFirst("type", "")
-                    .trim();
-            ValidCommand.isValidCommand(command);
+            type(command);
         } else if (command.contains("exit"))
             return false;
         else if (command.contains("echo")) {
@@ -26,6 +24,13 @@ public class Main {
             comandNotFound(command);
 
         return true;
+    }
+
+    private static void type(String command) {
+        command = command
+                .replaceFirst("type", "")
+                .trim();
+        ValidCommand.isValidCommand(command);
     }
 
     private static void comandNotFound(String command) {
