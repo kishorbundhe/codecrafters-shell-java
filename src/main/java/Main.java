@@ -15,9 +15,13 @@ public class Main {
         String command = scanner.nextLine();
         if (command.contains("exit"))
             return false;
-        else if (command.contains("echo"))
-            System.out.println("echo " + command.substring(5));
-        else
+        else if (command.contains("echo")) {
+            command = command
+                    .replace("echo", "")
+                    .trim()
+                    .replace("\"", "");
+            System.out.println(command);
+        } else
             System.out.println(command + ": command not found");
 
         return true;
