@@ -16,14 +16,22 @@ public class Main {
         if (command.contains("exit"))
             return false;
         else if (command.contains("echo")) {
-            command = command
-                    .replace("echo", "")
-                    .trim()
-                    .replace("\"", "");
-            System.out.println(command);
+            echo(command);
         } else
-            System.out.println(command + ": command not found");
+            comandNotFound(command);
 
         return true;
+    }
+
+    private static void comandNotFound(String command) {
+        System.out.println(command + ": command not found");
+    }
+
+    private static void echo(String command) {
+        command = command
+                .replace("echo", "")
+                .trim()
+                .replace("\"", "");
+        System.out.println(command);
     }
 }
