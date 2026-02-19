@@ -1,5 +1,6 @@
 public enum ValidCommand {
     EXIT("exit"),
+    TYPE("type"),
     ECHO("echo");
 
     private final String command;

@@ -15,7 +15,7 @@ public class Main {
         String command = scanner.nextLine();
         if (command.contains("type")) {
             command = command
-                    .replace("type", "")
+                    .replaceFirst("type", "")
                     .trim();
             ValidCommand.isValidCommand(command);
         } else if (command.contains("exit"))
@@ -34,7 +34,7 @@ public class Main {
 
     private static void echo(String command) {
         command = command
-                .replace("echo", "")
+                .replaceFirst("echo", "")
                 .trim()
                 .replace("\"", "");
         System.out.println(command);
