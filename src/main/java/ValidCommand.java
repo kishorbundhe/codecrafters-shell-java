@@ -13,13 +13,13 @@ public enum ValidCommand {
         return command;
     }
 
-    public static void isValidCommand(String command) {
+    public static boolean isValidCommand(String command) {
         for (ValidCommand validCommand : ValidCommand.values()) {
             if (validCommand.getCommand().equals(command)) {
                 System.out.println(command + " is a shell builtin");
-                return;
+                return true;
             }
         }
-        System.out.println(command + ": not found");
+            return false;
     }
 }
