@@ -50,7 +50,7 @@ public class Main {
         if (options.isEmpty()) {
             throw new UnsupportedOperationException("there should be options for this command");
         }
-
+        command = command.getFileName();
         List<String> args = Stream.concat(
                 Stream.of(command.toString()),
                 Arrays.stream(options.split(" ")))
