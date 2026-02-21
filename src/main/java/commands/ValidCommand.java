@@ -1,8 +1,8 @@
+package commands;
 public enum ValidCommand {
     EXIT("exit"),
     TYPE("type"),
-    ECHO("echo"),
-    PWD("pwd");
+    ECHO("echo");
 
     private final String command;
 
@@ -21,6 +21,6 @@ public enum ValidCommand {
                 return true;
             }
         }
-            return false;
+        return false;
     }
 }
