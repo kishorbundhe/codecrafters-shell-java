@@ -2,6 +2,7 @@ package commands;
 public enum ValidCommand {
     EXIT("exit"),
     TYPE("type"),
+    PWD("pwd"),
     ECHO("echo");
 
     private final String command;
