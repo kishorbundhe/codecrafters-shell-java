@@ -57,7 +57,8 @@ public class Main {
                 if (isDirectory) {
                     try {
                         Optional<Path> found = Files.list(dirPath)
-                                .filter(file -> file.getFileName().toString().equals(finalCommand))
+                                .filter(file -> file.getFileName().toString().equals(finalCommand)
+                                        && Files.isExecutable(file))
                                 .findFirst();
                         if (found.isPresent()) {
                             System.out.println(command + " is " + found.get());
@@ -65,7 +66,7 @@ public class Main {
                             break;
                         }
                     } catch (IOException e) {
-                       
+
                         e.printStackTrace();
                     }
                 }
