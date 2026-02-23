@@ -9,7 +9,7 @@ public class CdCommand implements Command {
     public boolean execute(String command, String options) {
         Path newPath;
         if (options.equalsIgnoreCase("~")) {
-            newPath = Path.of(System.getProperty("user.home"));
+            newPath = Path.of(System.getenv("HOME"));
             cdToPath(null, newPath);
             return true;
         }
