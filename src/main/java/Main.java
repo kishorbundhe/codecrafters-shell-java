@@ -9,7 +9,9 @@ import commands.EchoComand;
 import commands.ExitCommand;
 import commands.Pair;
 import commands.PwdCommand;
+import commands.CdCommand;
 import commands.TypeCommand;
+import commands.ValidCommand;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -28,10 +30,11 @@ public class Main {
         String command = inputFromUser.split(" ")[0];
         String options = inputFromUser.replaceFirst(command, "").trim();
 
-        if(command.equals(ValidCommand.PWD.getCommand())) {
+        if (command.equals(ValidCommand.PWD.getCommand())) {
             return new PwdCommand().execute(command, options);
-        }
-        if (command.equals(ValidCommand.TYPE.getCommand())) {
+        } else if (command.equals(ValidCommand.CD.getCommand())) {
+            return new CdCommand().execute(command, options);
+        } else if (command.equals(ValidCommand.TYPE.getCommand())) {
             return new TypeCommand().execute(command, options);
         } else if (command.equals(ValidCommand.EXIT.getCommand()))
             return new ExitCommand().execute(command, options);

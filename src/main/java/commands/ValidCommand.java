@@ -3,6 +3,7 @@ public enum ValidCommand {
     EXIT("exit"),
     TYPE("type"),
     PWD("pwd"),
+    CD("cd"),
     ECHO("echo");
 
     private final String command;
