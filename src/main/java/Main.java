@@ -27,9 +27,12 @@ public class Main {
     private static boolean shouldContinueRunningCommand(Scanner scanner) {
         System.out.print("$ ");
         String inputFromUser = scanner.nextLine();
+        if (inputFromUser.isBlank()) {
+            return true;
+        }
         String command = inputFromUser.split(" ")[0];
         String options = inputFromUser.replaceFirst(command, "").trim();
-
+        options = quoteOptionsIfNeeded(command, options);
         if (command.equals(ValidCommand.PWD.getCommand())) {
             return new PwdCommand().execute(command, options);
         } else if (command.equals(ValidCommand.CD.getCommand())) {
@@ -51,6 +54,18 @@ public class Main {
         }
 
         return true;
+    }
+
+    private static String quoteOptionsIfNeeded(String command, String options) {
+
+        if (options.startsWith("'") && options.endsWith("'")) {
+            options = options.replaceAll("^'|'$", "");
+        } else {
+            options = options.replaceAll("\\s+", " ");
+        
+        }
+        options = options.replaceAll("\'\'", "");
+        return options;
     }
 
 }
