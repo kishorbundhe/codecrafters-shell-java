@@ -46,9 +46,9 @@ public class Main {
             options = escapeSingleQuotes(command, options);
             return new EchoComand().execute(command, options);
         } else {
-            Pair<Boolean, Path> commandIsPresentAndExecutable = commandIsPresentAndExecutable(command);
-            Boolean isCommandPresentInSysPath = commandIsPresentAndExecutable.first();
-            Path path = commandIsPresentAndExecutable.second();
+            Pair<Boolean, Path> commandIsPresentAndExecutablePair = commandIsPresentAndExecutable(command);
+            Boolean isCommandPresentInSysPath = commandIsPresentAndExecutablePair.first();
+            Path path = commandIsPresentAndExecutablePair.second();
             if (isCommandPresentInSysPath) {
                 return new CustomExecutable().execute(path.getFileName().toString(), options);
             } else

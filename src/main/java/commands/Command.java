@@ -18,10 +18,6 @@ public interface Command {
 
         for (String dir : directories) {
             // list all files in the directory and check if the command exists
-            if (dir.contains(command)) {
-                System.out.println(command + " is " + dir);
-                return new Pair<>(true, Paths.get(dir));
-            }
             Path dirPath = Paths.get(dir);
             final String finalCommand = command;
             boolean isDirectory = Files.isDirectory(dirPath);
