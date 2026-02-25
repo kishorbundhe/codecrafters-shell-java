@@ -13,26 +13,10 @@ public class CustomExecutable implements Command {
     @Override
     public boolean execute(String command, String options) {
         List<String> args;
-        if (command.contains("cat")) {
-            Pattern pattern = Pattern.compile("'([^']*)'");
-            String copyOptions = options;
-            Matcher matcher = pattern.matcher(copyOptions);
-            ArrayList<String> files = new ArrayList<>();
-            while (matcher.find()) {
-                String toReplace = matcher.group(1); 
-                // group 0 =. 'world hello' group 1 = world hello
-                files.add(toReplace);
-                copyOptions = copyOptions.replaceFirst("'([^']*)'", "$1");
-            }
-            args = Stream.concat(
-                    Stream.of(command),
-                    files.stream())
-                    .collect(Collectors.toList());
+        if (command.equalsIgnoreCase("cat")) {
+            args = getCatCommandAndFiles(command, options);
         } else {
-            args = Stream.concat(
-                    Stream.of(command),
-                    Arrays.stream(options.split(" ")))
-                    .collect(Collectors.toList());
+            args = getCommandArgs(command, options);
         }
 
         ProcessBuilder processBuilder = new ProcessBuilder(args);
@@ -44,5 +28,31 @@ public class CustomExecutable implements Command {
             e.printStackTrace();
         }
         return true;
+    }
+
+    private List<String> getCommandArgs(String command, String options) {
+        return Stream.concat(
+                Stream.of(command),
+                Arrays.stream(options.split(" ")))
+                .collect(Collectors.toList());
+    }
+
+    private List<String> getCatCommandAndFiles(String command, String options) {
+        List<String> args;
+        Pattern pattern = Pattern.compile("'([^']*)'");
+        String copyOptions = options;
+        Matcher matcher = pattern.matcher(copyOptions);
+        ArrayList<String> files = new ArrayList<>();
+        while (matcher.find()) {
+            String toReplace = matcher.group(1);
+            // group 0 =. 'world hello' group 1 = world hello
+            files.add(toReplace);
+            copyOptions = copyOptions.replaceFirst("'([^']*)'", "$1");
+        }
+        args = Stream.concat(
+                Stream.of(command),
+                files.stream())
+                .collect(Collectors.toList());
+        return args;
     }
 }
