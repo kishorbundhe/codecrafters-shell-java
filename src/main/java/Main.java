@@ -34,7 +34,6 @@ public class Main {
         }
         String command = inputFromUser.split(" ")[0];
         String options = inputFromUser.replaceFirst(command, "").trim();
-        options = escapeSingleQuotes(command, options);
         if (command.equals(ValidCommand.PWD.getCommand())) {
             return new PwdCommand().execute(command, options);
         } else if (command.equals(ValidCommand.CD.getCommand())) {
@@ -44,6 +43,7 @@ public class Main {
         } else if (command.equals(ValidCommand.EXIT.getCommand()))
             return new ExitCommand().execute(command, options);
         else if (command.equals(ValidCommand.ECHO.getCommand())) {
+            options = escapeSingleQuotes(command, options);
             return new EchoComand().execute(command, options);
         } else {
             Pair<Boolean, Path> commandIsPresentAndExecutable = commandIsPresentAndExecutable(command);
