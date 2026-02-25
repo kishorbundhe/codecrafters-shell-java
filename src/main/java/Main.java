@@ -67,7 +67,7 @@ public class Main {
         Matcher matcher = pattern.matcher(copyOptions);
         while (matcher.find()) {
             String toReplace = matcher.group(1); // group 0 =. 'world hello' group 1 = world hello
-            toReplace = toReplace.replaceAll("\\s+", "@"); // replace spaces with @
+            toReplace = toReplace.replaceAll(" ", "@"); // replace spaces with @
             copyOptions = copyOptions.replaceFirst("'([^']*)'", toReplace);
         }
         options = copyOptions;
