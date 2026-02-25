@@ -19,7 +19,7 @@ public class CustomExecutable implements Command {
             Matcher matcher = pattern.matcher(copyOptions);
             ArrayList<String> files = new ArrayList<>();
             while (matcher.find()) {
-                String toReplace = matcher.group(0); 
+                String toReplace = matcher.group(1); 
                 // group 0 =. 'world hello' group 1 = world hello
                 files.add(toReplace);
                 copyOptions = copyOptions.replaceFirst("'([^']*)'", "$1");
