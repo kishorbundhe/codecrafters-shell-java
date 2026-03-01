@@ -63,7 +63,7 @@ public class Main {
         Pattern pattern;
         String regex;
         if (options.startsWith("\"") && options.endsWith("\"")) {
-            options = options.replaceAll("\"\'", "");
+            options = options.replaceAll("\"\"", "");
             regex = "\"([^\"]*)\"";
             pattern = Pattern.compile(regex);
         } else {
