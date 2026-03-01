@@ -60,21 +60,30 @@ public class Main {
 
     // 'world hello' 'shell''script' example''test
     private static String escapeSingleQuotes(String command, String options) {
+        Pattern pattern;
+        String regex;
+        if (options.startsWith("\"") && options.endsWith("\"")) {
+            options = options.replaceAll("\"\'", "");
+            regex = "\"([^\"]*)\"";
+            pattern = Pattern.compile(regex);
+        } else {
+            options = options.replaceAll("\'\'", "");
+            regex = "'([^']*)'";
+            pattern = Pattern.compile(regex);
+        }
 
-        options = options.replaceAll("\'\'", "");
-        Pattern pattern = Pattern.compile("'([^']*)'");
         String copyOptions = options;
         Matcher matcher = pattern.matcher(copyOptions);
         while (matcher.find()) {
             String toReplace = matcher.group(1); // group 0 =. 'world hello' group 1 = world hello
             toReplace = toReplace.replaceAll(" ", "@"); // replace spaces with @
-            copyOptions = copyOptions.replaceFirst("'([^']*)'", toReplace);
+            copyOptions = copyOptions.replaceFirst(regex, toReplace);
         }
         options = copyOptions;
         options = options.replaceAll("\\s+", " ");
         options = options.replaceAll("@", " ");
         return options;
-      
+
     }
 
 }

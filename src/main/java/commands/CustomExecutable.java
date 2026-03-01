@@ -39,7 +39,25 @@ public class CustomExecutable implements Command {
 
     private List<String> getCatCommandAndFiles(String command, String options) {
         List<String> args;
-        Pattern pattern = Pattern.compile("'([^']*)'");
+        ArrayList<String> files = escapeQuotes(options);
+        args = Stream.concat(
+                Stream.of(command),
+                files.stream())
+                .collect(Collectors.toList());
+        return args;
+    }
+
+    private ArrayList<String> escapeQuotes(String options) {
+        Pattern pattern;
+        String regex;
+        if (options.startsWith("\"") && options.endsWith("\"")) {
+            regex = "\"([^\"]*)\"";
+            pattern = Pattern.compile(regex);
+        } else {
+            regex = "'([^']*)'";
+            pattern = Pattern.compile(regex);
+        }
+
         String copyOptions = options;
         Matcher matcher = pattern.matcher(copyOptions);
         ArrayList<String> files = new ArrayList<>();
@@ -47,12 +65,8 @@ public class CustomExecutable implements Command {
             String toReplace = matcher.group(1);
             // group 0 =. 'world hello' group 1 = world hello
             files.add(toReplace);
-            copyOptions = copyOptions.replaceFirst("'([^']*)'", "$1");
+            copyOptions = copyOptions.replaceFirst(regex, "$1");
         }
-        args = Stream.concat(
-                Stream.of(command),
-                files.stream())
-                .collect(Collectors.toList());
-        return args;
+        return files;
     }
 }
