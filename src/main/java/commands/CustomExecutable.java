@@ -50,7 +50,7 @@ public class CustomExecutable implements Command {
     private ArrayList<String> escapeQuotes(String options) {
         Pattern pattern;
         String regex;
-        if (options.startsWith("\"") && options.endsWith("\"")) {
+        if (options.startsWith("\"")) {
             regex = "\"([^\"]*)\"";
             pattern = Pattern.compile(regex);
         } else {

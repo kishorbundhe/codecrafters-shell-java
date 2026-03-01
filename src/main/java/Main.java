@@ -62,7 +62,7 @@ public class Main {
     private static String escapeSingleQuotes(String command, String options) {
         Pattern pattern;
         String regex;
-        if (options.startsWith("\"") && options.endsWith("\"")) {
+        if (options.startsWith("\"")) {
             options = options.replaceAll("\"\"", "");
             regex = "\"([^\"]*)\"";
             pattern = Pattern.compile(regex);
