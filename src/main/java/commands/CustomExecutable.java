@@ -48,25 +48,37 @@ public class CustomExecutable implements Command {
     }
 
     private ArrayList<String> escapeQuotes(String options) {
-        Pattern pattern;
-        String regex;
-        if (options.startsWith("\"")) {
-            regex = "\"([^\"]*)\"";
-            pattern = Pattern.compile(regex);
-        } else {
-            regex = "'([^']*)'";
-            pattern = Pattern.compile(regex);
+        ArrayList<String> files = new ArrayList<>();
+        String regex = "\"([^\"]*?)\"|'([^']*?)'";
+        Pattern pattern = Pattern.compile(regex);
+        options.replaceAll("\"\"", "");
+        options.replaceAll("\'\'", "");
+        StringBuilder copyOptions = new StringBuilder(options);
+        StringBuilder escapedOptions = new StringBuilder();
+        while (true) {
+            boolean hasNoMatch = false;
+            Matcher matcher = pattern.matcher(copyOptions.toString());
+            int start = 0;
+            if (matcher.find()) {
+                if (matcher.start() != 0) {
+                    String s = copyOptions.toString().substring(0, matcher.start());
+                    String substr = s.replaceAll("\\s+", " ");
+                    escapedOptions.append(substr);
+                }
+                files.add(escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1).toString());
+                copyOptions.delete(start, matcher.end());
+            } else {
+                hasNoMatch = true;
+                escapedOptions.append(copyOptions);
+                break;
+            }
+            start = matcher.start();
+            if (hasNoMatch) {
+                break;
+            }
+
         }
 
-        String copyOptions = options;
-        Matcher matcher = pattern.matcher(copyOptions);
-        ArrayList<String> files = new ArrayList<>();
-        while (matcher.find()) {
-            String toReplace = matcher.group(1);
-            // group 0 =. 'world hello' group 1 = world hello
-            files.add(toReplace);
-            copyOptions = copyOptions.replaceFirst(regex, "$1");
-        }
         return files;
     }
 }
