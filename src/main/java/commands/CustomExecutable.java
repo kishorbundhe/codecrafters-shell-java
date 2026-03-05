@@ -61,15 +61,29 @@ public class CustomExecutable implements Command {
             int start = 0;
             if (matcher.find()) {
                 if (matcher.start() != 0) {
-                    String s = copyOptions.toString().substring(0, matcher.start());
-                    String substr = s.replaceAll("\\s+", " ");
+                    String substr = copyOptions
+                            .toString()
+                            .substring(0, matcher.start())
+                            .replaceAll("\\s+", " ");
                     escapedOptions.append(substr);
                 }
                 files.add(escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1).toString());
                 copyOptions.delete(start, matcher.end());
             } else {
-                hasNoMatch = true;
-                escapedOptions.append(copyOptions);
+               options= options.replaceAll("\\s+", " ");
+                StringBuilder temporary = new StringBuilder();
+                for(int i=0;i<options.length();i++){
+                    char ch = options.charAt(i);
+                    if(ch=='\\'){
+                        i++;
+                        temporary.append(options.charAt(i));
+                        continue;
+                    }
+                    temporary.append(ch);
+                }
+                options = temporary.toString();
+                String nameOfFiles[] = temporary.toString().split(" ");
+                Arrays.stream(nameOfFiles).forEach(file->files.add(file));
                 break;
             }
             start = matcher.start();

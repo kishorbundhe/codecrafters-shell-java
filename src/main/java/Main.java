@@ -60,37 +60,49 @@ public class Main {
 
     // 'world hello' 'shell''script' example''test
     private static String escapeSingleQuotes(String command, String options) {
-        
-        String regex = "\"([^\"]*?)\"|'([^']*?)'";
+
+        String regex = "\"([^\"]*?)\"| '([^']*?)' | !\\\\\"([^\"]*?)\"\\\\| !\\\\'([^']*?)'\\\\";
         Pattern pattern = Pattern.compile(regex);
-        options.replaceAll("\"\"", "");
-        options.replaceAll("\'\'", "");
+        options = options.replaceAll("\"\"", "");
+        options = options.replaceAll("\'\'", "");
         StringBuilder copyOptions = new StringBuilder(options);
         StringBuilder escapedOptions = new StringBuilder();
-        while(true){
+        while (true) {
             boolean hasNoMatch = false;
             Matcher matcher = pattern.matcher(copyOptions.toString());
-            int start=0;
+            int start = 0;
             if (matcher.find()) {
-                if(matcher.start()!=0) {
-                    String s = copyOptions.toString().substring(0, matcher.start());
-                    String substr = s.replaceAll("\\s+", " ");
+                if (matcher.start() != 0) {
+                    String substr = copyOptions
+                            .toString()
+                            .substring(0, matcher.start())
+                            .replaceAll("\\s+", " ");
                     escapedOptions.append(substr);
                 }
-                escapedOptions.append(copyOptions, matcher.start()+1, matcher.end()-1);
+                escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1);
                 copyOptions.delete(start, matcher.end());
             } else {
-                hasNoMatch = true;
-                escapedOptions.append(copyOptions);
+                options= options.replaceAll("\\s+", " ");
+                StringBuilder temporary = new StringBuilder();
+                for(int i=0;i<options.length();i++){
+                    char ch = options.charAt(i);
+                    if(ch=='\\'){
+                        i++;
+                        temporary.append(options.charAt(i));
+                        continue;
+                    }
+                    temporary.append(ch);
+                }
+                options = temporary.toString();
+                escapedOptions.append(options);
                 break;
             }
-            start= matcher.start();
-            if(hasNoMatch){
+            start = matcher.start();
+            if (hasNoMatch) {
                 break;
-        }
+            }
 
         }
-        
         options = escapedOptions.toString();
         return options;
     }
