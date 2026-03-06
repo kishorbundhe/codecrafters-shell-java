@@ -79,18 +79,7 @@ public class Main {
                 escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1);
                 copyOptions.delete(start, matcher.end());
             } else {
-                StringBuilder temporary = new StringBuilder();
-                copyOptions = new StringBuilder(copyOptions.toString().replaceAll("\\s+", " "));
-                for(int i=start;i<copyOptions.length();i++){
-                    char ch = copyOptions.charAt(i);
-                    if(ch=='\\'){
-                        i++;
-                        temporary.append(copyOptions.charAt(i));
-                        continue;
-                    } 
-                    temporary.append(ch);
-                }
-                escapedOptions.append(temporary.toString());
+                copyOptions = stringHasNoMatch(copyOptions, escapedOptions, start);
                 break;
             }
             start = matcher.start();
@@ -98,6 +87,22 @@ public class Main {
 
         options = escapedOptions.toString();
         return options;
+    }
+
+    private static StringBuilder stringHasNoMatch(StringBuilder copyOptions, StringBuilder escapedOptions, int start) {
+        StringBuilder temporary = new StringBuilder();
+        copyOptions = new StringBuilder(copyOptions.toString().replaceAll("\\s+", " "));
+        for (int i = start; i < copyOptions.length(); i++) {
+            char ch = copyOptions.charAt(i);
+            if (ch == '\\') {
+                i++;
+                temporary.append(copyOptions.charAt(i));
+                continue;
+            }
+            temporary.append(ch);
+        }
+        escapedOptions.append(temporary.toString());
+        return copyOptions;
     }
 
 }
