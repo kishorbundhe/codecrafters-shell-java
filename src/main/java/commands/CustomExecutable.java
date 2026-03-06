@@ -49,17 +49,17 @@ public class CustomExecutable implements Command {
 
     private ArrayList<String> escapeQuotes(String options) {
         ArrayList<String> files = new ArrayList<>();
-        String regex = "\"([^\"]*?)\"|'([^']*?)'";
+        String regex = "(?<!\\\\)\"([^\"]*?)\"(?!\\\\)|(?<!\\\\)'([^']*?)'(?!\\\\)";
         Pattern pattern = Pattern.compile(regex);
         options.replaceAll("\"\"", "");
         options.replaceAll("\'\'", "");
         StringBuilder copyOptions = new StringBuilder(options);
-        StringBuilder escapedOptions = new StringBuilder();
+
         while (true) {
-            boolean hasNoMatch = false;
             Matcher matcher = pattern.matcher(copyOptions.toString());
             int start = 0;
             if (matcher.find()) {
+                StringBuilder escapedOptions = new StringBuilder();
                 if (matcher.start() != 0) {
                     String substr = copyOptions
                             .toString()
@@ -71,6 +71,8 @@ public class CustomExecutable implements Command {
                 copyOptions.delete(start, matcher.end());
             } else {
                 StringBuilder temporary = new StringBuilder();
+                if (copyOptions.isEmpty())
+                    break;
                 for (int i = start; i < copyOptions.length(); i++) {
                     char ch = copyOptions.charAt(i);
                     if (ch == '\\') {
