@@ -80,16 +80,17 @@ public class Main {
                 copyOptions.delete(start, matcher.end());
             } else {
                 StringBuilder temporary = new StringBuilder();
+                copyOptions = new StringBuilder(copyOptions.toString().replaceAll("\\s+", " "));
                 for(int i=start;i<copyOptions.length();i++){
                     char ch = copyOptions.charAt(i);
                     if(ch=='\\'){
                         i++;
                         temporary.append(copyOptions.charAt(i));
                         continue;
-                    }
+                    } 
                     temporary.append(ch);
                 }
-                escapedOptions.append(temporary.toString().replaceAll("\\s+", " "));
+                escapedOptions.append(temporary.toString());
                 break;
             }
             start = matcher.start();
