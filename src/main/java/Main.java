@@ -89,7 +89,7 @@ public class Main {
                     }
                     temporary.append(ch);
                 }
-                escapedOptions.append(temporary.toString());
+                escapedOptions.append(temporary.toString().replaceAll("\\s+", " "));
                 break;
             }
             start = matcher.start();
