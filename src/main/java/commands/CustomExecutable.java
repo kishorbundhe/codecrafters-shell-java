@@ -63,10 +63,10 @@ public class CustomExecutable implements Command {
                 if (matcher.start() != 0) {
                     String s = copyOptions.toString().substring(0, matcher.start());
                     String substr = s.replaceAll("\\s+", "");
-                    if(!substr.isBlank())
-                    escapedOptions.append(substr);
+                    if (!substr.isBlank())
+                        escapedOptions.append(substr);
                 }
-                files.add(escapedOptions.append(copyOptions, matcher.start() , matcher.end() ).toString());
+                files.add(escapedOptions.append(copyOptions, matcher.start(), matcher.end()).toString());
                 copyOptions.delete(start, matcher.end());
             } else {
                 StringBuilder temporary = new StringBuilder();
