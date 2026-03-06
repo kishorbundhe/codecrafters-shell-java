@@ -62,7 +62,7 @@ public class CustomExecutable implements Command {
                 StringBuilder escapedOptions = new StringBuilder();
                 if (matcher.start() != 0) {
                     String s = copyOptions.toString().substring(0, matcher.start());
-                    String substr = s.replaceAll("\\s+", " ");
+                    String substr = s.replaceAll("\\s+", "");
                     if(!substr.isBlank())
                     escapedOptions.append(substr);
                 }
