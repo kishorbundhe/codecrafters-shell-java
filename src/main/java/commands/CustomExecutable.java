@@ -65,23 +65,7 @@ public class CustomExecutable implements Command {
                 }
                 if (copyOptions.charAt(matcher.start()) == '\"') {
                     // Double quotes
-                    int i = matcher.start() + 1;
-                    int end = matcher.end() - 1;
-                    StringBuilder temporary = new StringBuilder();
-                    for (; i < end; i++) {
-                        char ch = copyOptions.charAt(i);
-                        if (ch == '\\' && ((i + 1 <= end)
-                                && (copyOptions.charAt(i + 1) == '\"' || copyOptions.charAt(i + 1) == '\\'))) {
-                            // this is escaping logic
-                            i++;
-                            temporary.append(copyOptions.charAt(i));
-                            continue;
-                        }
-                        temporary.append(ch);
-                    }
-                    escapedOptions.append(temporary.toString());
-                    files.add(escapedOptions.toString());
-                    copyOptions.delete(start, matcher.end());
+                    processBackSlashInsideDoubleQuotes(files, copyOptions, matcher, start, escapedOptions);
 
                 } else {
                     // single quotes
@@ -110,6 +94,28 @@ public class CustomExecutable implements Command {
         }
 
         return files;
+    }
+
+    private void processBackSlashInsideDoubleQuotes(ArrayList<String> files, StringBuilder copyOptions, Matcher matcher,
+            int start,
+            StringBuilder escapedOptions) {
+        int i = matcher.start() + 1;
+        int end = matcher.end() - 1;
+        StringBuilder temporary = new StringBuilder();
+        for (; i < end; i++) {
+            char ch = copyOptions.charAt(i);
+            if (ch == '\\' && ((i + 1 <= end)
+                    && (copyOptions.charAt(i + 1) == '\"' || copyOptions.charAt(i + 1) == '\\'))) {
+                // this is escaping logic
+                i++;
+                temporary.append(copyOptions.charAt(i));
+                continue;
+            }
+            temporary.append(ch);
+        }
+        escapedOptions.append(temporary.toString());
+        files.add(escapedOptions.toString());
+        copyOptions.delete(start, matcher.end());
     }
 
     private void processBackSlashInsideSingleQuotes(ArrayList<String> files, StringBuilder copyOptions, Matcher matcher,
