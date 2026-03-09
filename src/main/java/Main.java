@@ -60,7 +60,7 @@ public class Main {
 
     // 'world hello' 'shell''script' example''test
     private static String escapeSingleQuotes(String command, String options) {
-
+        
         String regex = "(?<!\\\\)\"([^\"]*?)\"(?!\\\\)|(?<!\\\\)'([^']*?)'(?!\\\\)";
         Pattern pattern = Pattern.compile(regex);
         options.replaceAll("\"\"", "");

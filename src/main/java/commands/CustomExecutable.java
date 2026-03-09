@@ -66,7 +66,7 @@ public class CustomExecutable implements Command {
                     if (!substr.isBlank())
                         escapedOptions.append(substr);
                 }
-                files.add(escapedOptions.append(copyOptions, matcher.start(), matcher.end()).toString());
+                files.add(escapedOptions.append(copyOptions, matcher.start()+1, matcher.end()-1).toString());
                 copyOptions.delete(start, matcher.end());
             } else {
                 StringBuilder temporary = new StringBuilder();
