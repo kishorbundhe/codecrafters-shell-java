@@ -49,7 +49,7 @@ public class CustomExecutable implements Command {
 
     private ArrayList<String> escapeQuotes(String options) {
         ArrayList<String> files = new ArrayList<>();
-        String regex = "(?<!\\\\)\"([^\"]*?)\"(?!\\\\)|(?<!\\\\)'([^']*?)'(?!\\\\)";
+        String regex = "(?<!\\\\)\"((?:\\\\.|[^\"\\\\])*)\"(?!\\\\)|(?<!\\\\)'([^']*?)'(?!\\\\)";
         Pattern pattern = Pattern.compile(regex);
         options.replaceAll("\"\"", "");
         options.replaceAll("\'\'", "");
@@ -61,13 +61,33 @@ public class CustomExecutable implements Command {
             if (matcher.find()) {
                 StringBuilder escapedOptions = new StringBuilder();
                 if (matcher.start() != 0) {
-                    String s = copyOptions.toString().substring(0, matcher.start());
-                    String substr = s.replaceAll("\\s+", "");
-                    if (!substr.isBlank())
-                        escapedOptions.append(substr);
+                    beforeMatch(copyOptions, matcher, escapedOptions);
                 }
-                files.add(escapedOptions.append(copyOptions, matcher.start()+1, matcher.end()-1).toString());
-                copyOptions.delete(start, matcher.end());
+                if (copyOptions.charAt(matcher.start()) == '\"') {
+                    // Double quotes
+                    int i = matcher.start() + 1;
+                    int end = matcher.end() - 1;
+                    StringBuilder temporary = new StringBuilder();
+                    for (; i < end; i++) {
+                        char ch = copyOptions.charAt(i);
+                        if (ch == '\\' && ((i + 1 <= end)
+                                && (copyOptions.charAt(i + 1) == '\"' || copyOptions.charAt(i + 1) == '\\'))) {
+                            // this is escaping logic
+                            i++;
+                            temporary.append(copyOptions.charAt(i));
+                            continue;
+                        }
+                        temporary.append(ch);
+                    }
+                    escapedOptions.append(temporary.toString());
+                    files.add(escapedOptions.toString());
+                    copyOptions.delete(start, matcher.end());
+
+                } else {
+                    // single quotes
+                    processBackSlashInsideSingleQuotes(files, copyOptions, matcher, start, escapedOptions);
+                }
+
             } else {
                 StringBuilder temporary = new StringBuilder();
                 if (copyOptions.isEmpty())
@@ -90,5 +110,19 @@ public class CustomExecutable implements Command {
         }
 
         return files;
+    }
+
+    private void processBackSlashInsideSingleQuotes(ArrayList<String> files, StringBuilder copyOptions, Matcher matcher,
+            int start,
+            StringBuilder escapedOptions) {
+        files.add(escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1).toString());
+        copyOptions.delete(start, matcher.end());
+    }
+
+    private void beforeMatch(StringBuilder copyOptions, Matcher matcher, StringBuilder escapedOptions) {
+        String s = copyOptions.toString().substring(0, matcher.start());
+        String substr = s.replaceAll("\\s+", "");
+        if (!substr.isBlank())
+            escapedOptions.append(substr);
     }
 }

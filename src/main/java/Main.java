@@ -60,8 +60,8 @@ public class Main {
 
     // 'world hello' 'shell''script' example''test
     private static String escapeSingleQuotes(String command, String options) {
-        
-        String regex = "(?<!\\\\)\"([^\"]*?)\"(?!\\\\)|(?<!\\\\)'([^']*?)'(?!\\\\)";
+
+        String regex = "(?<!\\\\)\"((?:\\\\.|[^\"\\\\])*)\"(?!\\\\)|(?<!\\\\)'([^']*?)'(?!\\\\)";
         Pattern pattern = Pattern.compile(regex);
         options.replaceAll("\"\"", "");
         options.replaceAll("\'\'", "");
@@ -72,12 +72,17 @@ public class Main {
             int start = 0;
             if (matcher.find()) {
                 if (matcher.start() != 0) {
-                    String s = copyOptions.toString().substring(0, matcher.start());
-                    String substr = s.replaceAll("\\s+", " ");
-                    escapedOptions.append(substr);
+                    beforeMatch(copyOptions, escapedOptions, matcher);
                 }
-                escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1);
-                copyOptions.delete(start, matcher.end());
+                // after the match starts, check if it is double quote or single quotes
+                if (copyOptions.charAt(matcher.start()) == '\"') {
+                    // if it is inside double quotes then we need escape ",\
+                    processBackSlashInsideDoubleQuotes(copyOptions, escapedOptions, matcher, start);
+                } else {
+                    // if it is inside single quote
+                    processBackSlashInsideSingleQuotes(copyOptions, escapedOptions, matcher, start);
+                }
+
             } else {
                 copyOptions = stringHasNoMatch(copyOptions, escapedOptions, start);
                 break;
@@ -89,7 +94,41 @@ public class Main {
         return options;
     }
 
+    private static void processBackSlashInsideDoubleQuotes(StringBuilder copyOptions, StringBuilder escapedOptions,
+            Matcher matcher,
+            int start) {
+        int i = matcher.start() + 1;
+        int end = matcher.end() - 1;
+        StringBuilder temporary = new StringBuilder();
+        for (; i < end; i++) {
+            char ch = copyOptions.charAt(i);
+            if (ch == '\\' && ((i + 1 <= end)
+                    && (copyOptions.charAt(i + 1) == '\"' || copyOptions.charAt(i + 1) == '\\'))) {
+                // this is escaping logic
+                i++;
+                temporary.append(copyOptions.charAt(i));
+                continue;
+            }
+            temporary.append(ch);
+        }
+        escapedOptions.append(temporary.toString());
+        copyOptions.delete(start, matcher.end());
+    }
+
+    private static void processBackSlashInsideSingleQuotes(StringBuilder copyOptions, StringBuilder escapedOptions,
+            Matcher matcher, int start) {
+        escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1);
+        copyOptions.delete(start, matcher.end());
+    }
+
+    private static void beforeMatch(StringBuilder copyOptions, StringBuilder escapedOptions, Matcher matcher) {
+        String s = copyOptions.toString().substring(0, matcher.start());
+        String substr = s.replaceAll("\\s+", " ");
+        escapedOptions.append(substr);
+    }
+
     private static StringBuilder stringHasNoMatch(StringBuilder copyOptions, StringBuilder escapedOptions, int start) {
+        // if the string is of the form : \"test 123"
         StringBuilder temporary = new StringBuilder();
         copyOptions = new StringBuilder(copyOptions.toString().replaceAll("\\s+", " "));
         for (int i = start; i < copyOptions.length(); i++) {
