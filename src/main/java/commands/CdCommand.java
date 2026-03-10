@@ -17,6 +17,7 @@ public class CdCommand implements Command {
         if (newPath.isAbsolute()) {
             newPath = newPath.resolve(options).normalize();
         } else {
+            // relative
             Path path = Path.of(System.getProperty("user.dir")).resolve(newPath);
             newPath = path.normalize();
         }

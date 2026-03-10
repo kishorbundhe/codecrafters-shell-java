@@ -28,12 +28,38 @@ public class Main {
 
     private static boolean shouldContinueRunningCommand(Scanner scanner) {
         System.out.print("$ ");
-        String inputFromUser = scanner.nextLine();
+        String inputFromUser = scanner.nextLine().trim();
+        String command, options;
         if (inputFromUser.isBlank()) {
             return true;
         }
-        String command = inputFromUser.split(" ")[0];
-        String options = inputFromUser.replaceFirst(command, "").trim();
+        if (inputFromUser.startsWith("\"")) {
+            String regex = "\"([^\"]*)\"";
+            Matcher matcher = Pattern.compile(regex).matcher(inputFromUser);
+            boolean hasMatch = matcher.find();
+            if (hasMatch) {
+                command = matcher.group(0);
+                options = inputFromUser.replaceFirst(command, "").trim();
+            } else {
+                System.out.println("could not process the command");
+                return true;
+            }
+        } else if (inputFromUser.startsWith("'")) {
+            String regex = "'([^']*)'"; // '([^']*?)'
+            Matcher matcher = Pattern.compile(regex).matcher(inputFromUser);
+            boolean hasMatch = matcher.find();
+            if (hasMatch) {
+                command = matcher.group(0);
+                options = inputFromUser.replaceFirst(command, "").trim();
+            } else {
+                System.out.println("could not process the command");
+                return true;
+            }
+        } else {
+            command = inputFromUser.split(" ")[0];
+            options = inputFromUser.replaceFirst(command, "").trim();
+        }
+
         if (command.equals(ValidCommand.PWD.getCommand())) {
             return new PwdCommand().execute(command, options);
         } else if (command.equals(ValidCommand.CD.getCommand())) {
@@ -43,9 +69,11 @@ public class Main {
         } else if (command.equals(ValidCommand.EXIT.getCommand()))
             return new ExitCommand().execute(command, options);
         else if (command.equals(ValidCommand.ECHO.getCommand())) {
-            options = escapeSingleQuotes(command, options);
+            options = escapeQuotes(options);
             return new EchoComand().execute(command, options);
         } else {
+            command = escapeQuotes(command);
+            System.out.println("++. " + command);
             Pair<Boolean, Path> commandIsPresentAndExecutablePair = commandIsPresentAndExecutable(command);
             Boolean isCommandPresentInSysPath = commandIsPresentAndExecutablePair.first();
             Path path = commandIsPresentAndExecutablePair.second();
@@ -59,7 +87,7 @@ public class Main {
     }
 
     // 'world hello' 'shell''script' example''test
-    private static String escapeSingleQuotes(String command, String options) {
+    private static String escapeQuotes(String options) {
 
         String regex = "(?<!\\\\)\"((?:\\\\.|[^\"\\\\])*)\"(?!\\\\)|(?<!\\\\)'([^']*?)'(?!\\\\)";
         Pattern pattern = Pattern.compile(regex);
