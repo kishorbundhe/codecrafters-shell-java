@@ -39,7 +39,7 @@ public class Main {
             boolean hasMatch = matcher.find();
             if (hasMatch) {
                 command = matcher.group(0);
-                options = inputFromUser.replaceFirst(command, "").trim();
+                options = inputFromUser.substring(matcher.end(),inputFromUser.length()).trim();
             } else {
                 System.out.println("could not process the command");
                 return true;
@@ -50,7 +50,7 @@ public class Main {
             boolean hasMatch = matcher.find();
             if (hasMatch) {
                 command = matcher.group(0);
-                options = inputFromUser.replaceFirst(command, "").trim();
+                options = inputFromUser.substring(matcher.end(),inputFromUser.length()).trim();
             } else {
                 System.out.println("could not process the command");
                 return true;
