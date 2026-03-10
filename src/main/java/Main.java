@@ -73,7 +73,7 @@ public class Main {
             return new EchoComand().execute(command, options);
         } else {
             command = escapeQuotes(command);
-            System.out.println("++. " + command);
+        
             Pair<Boolean, Path> commandIsPresentAndExecutablePair = commandIsPresentAndExecutable(command);
             Boolean isCommandPresentInSysPath = commandIsPresentAndExecutablePair.first();
             Path path = commandIsPresentAndExecutablePair.second();
