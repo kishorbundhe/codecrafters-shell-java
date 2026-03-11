@@ -1,6 +1,8 @@
 import static commands.Command.commandIsPresentAndExecutable;
 import static commands.Command.commandNotFound;
 
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -19,7 +21,11 @@ public class Main {
     public static void main(String[] args) throws Exception {
         try (Scanner scanner = new Scanner(System.in)) {
             for (;;) {
-                if (!shouldContinueRunningCommand(scanner)) {
+                final PrintStream console = System.out;
+                boolean shouldContinue = shouldContinueRunningCommand(scanner);
+                if (!System.out.equals(console))
+                    System.setOut(console);
+                if (!shouldContinue) {
                     break;
                 }
             }
@@ -29,17 +35,32 @@ public class Main {
     private static boolean shouldContinueRunningCommand(Scanner scanner) {
         System.out.print("$ ");
         String inputFromUser = scanner.nextLine().trim();
-        String command, options;
+        String command, options, stdOutFileName = "";
+
         if (inputFromUser.isBlank()) {
             return true;
         }
+        if (inputFromUser.contains(">") || inputFromUser.contains("1>")) {
+
+            String[] split = inputFromUser.split(">|1>");
+            inputFromUser = split[0].trim();
+            stdOutFileName = split[1].trim();
+        }
+        if (stdOutFileName != null && !stdOutFileName.isEmpty()) {
+            try {
+                System.setOut(new PrintStream(stdOutFileName));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
         if (inputFromUser.startsWith("\"")) {
             String regex = "\"([^\"]*)\"";
             Matcher matcher = Pattern.compile(regex).matcher(inputFromUser);
             boolean hasMatch = matcher.find();
             if (hasMatch) {
                 command = matcher.group(0);
-                options = inputFromUser.substring(matcher.end(),inputFromUser.length()).trim();
+                options = inputFromUser.substring(matcher.end(), inputFromUser.length()).trim();
             } else {
                 System.out.println("could not process the command");
                 return true;
@@ -50,7 +71,7 @@ public class Main {
             boolean hasMatch = matcher.find();
             if (hasMatch) {
                 command = matcher.group(0);
-                options = inputFromUser.substring(matcher.end(),inputFromUser.length()).trim();
+                options = inputFromUser.substring(matcher.end(), inputFromUser.length()).trim();
             } else {
                 System.out.println("could not process the command");
                 return true;
@@ -73,7 +94,7 @@ public class Main {
             return new EchoComand().execute(command, options);
         } else {
             command = escapeQuotes(command);
-        
+
             Pair<Boolean, Path> commandIsPresentAndExecutablePair = commandIsPresentAndExecutable(command);
             Boolean isCommandPresentInSysPath = commandIsPresentAndExecutablePair.first();
             Path path = commandIsPresentAndExecutablePair.second();
@@ -82,7 +103,6 @@ public class Main {
             } else
                 commandNotFound(inputFromUser);
         }
-
         return true;
     }
 
