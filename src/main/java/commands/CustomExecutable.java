@@ -16,6 +16,7 @@ public class CustomExecutable implements Command {
         String command = userInput.command();
         String options = userInput.options();
         String stdFileName = userInput.stdOutFile();
+        String stdErrFileName = userInput.stdErrFile();
         List<String> args;
         if (command.equalsIgnoreCase("cat")) {
             args = getCatCommandAndFiles(command, options);
@@ -28,6 +29,9 @@ public class CustomExecutable implements Command {
         processBuilder.inheritIO();
         if(stdFileName!=null&& !stdFileName.isEmpty()){
             processBuilder.redirectOutput(new File(stdFileName));
+        }
+        if(stdErrFileName!=null&& !stdErrFileName.isEmpty()){
+            processBuilder.redirectError(new File(stdErrFileName));
         }
         try {
             Process process = processBuilder.start();

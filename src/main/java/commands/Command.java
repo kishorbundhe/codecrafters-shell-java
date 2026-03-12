@@ -40,7 +40,7 @@ public interface Command {
         return new Pair<>(false, null);
     }
 
-    public static void commandNotFound(String command) {
+    static void commandNotFound(String command) {
         System.out.println(command + ": not found");
     }
 }

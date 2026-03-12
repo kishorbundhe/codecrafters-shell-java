@@ -1,0 +1,12 @@
+total 88
+-rw-r--r--@ 1 kishorbundhe  staff    448 Mar 12 01:37 1.txt
+-rw-r--r--@ 1 kishorbundhe  staff      0 Mar 12 22:49 123.txt
+-rw-r--r--@ 1 kishorbundhe  staff   1379 Feb 17 00:48 README.md
+-rw-r--r--@ 1 kishorbundhe  staff  15962 Mar 12 22:49 Refactoring.patch
+-rw-r--r--@ 1 kishorbundhe  staff     13 Mar 12 01:48 bee.md
+-rw-r--r--@ 1 kishorbundhe  staff    280 Feb 17 00:48 codecrafters.yml
+-rw-r--r--@ 1 kishorbundhe  staff   2414 Mar 12 01:29 pom.xml
+drwxr-xr-x@ 3 kishorbundhe  staff     96 Feb 17 00:48 src
+drwxr-xr-x@ 9 kishorbundhe  staff    288 Mar 12 01:38 target
+-rw-r--r--@ 1 kishorbundhe  staff      5 Mar 12 22:48 test123.txt
+-rwxr-xr-x@ 1 kishorbundhe  staff    865 Feb 17 00:48 your_program.sh

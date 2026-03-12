@@ -8,15 +8,7 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import commands.CdCommand;
-import commands.CustomExecutable;
-import commands.EchoComand;
-import commands.ExitCommand;
-import commands.Pair;
-import commands.PwdCommand;
-import commands.TypeCommand;
-import commands.UserInput;
-import commands.ValidCommand;
+import commands.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -26,6 +18,9 @@ public class Main {
                 boolean shouldContinue = shouldContinueRunningCommand(scanner);
                 if (!System.out.equals(console))
                     System.setOut(console);
+                if (!System.err.equals(console)) {
+                    System.setErr(console);
+                }
                 if (!shouldContinue) {
                     break;
                 }
@@ -36,20 +31,63 @@ public class Main {
     private static boolean shouldContinueRunningCommand(Scanner scanner) {
         System.out.print("$ ");
         String inputFromUser = scanner.nextLine().trim();
-        String command, options, stdOutFileName = "";
-
         if (inputFromUser.isBlank()) {
             return true;
         }
-        if (inputFromUser.contains(">") || inputFromUser.contains("1>")) {
+        UserInput commandAndOption = processUserCommand(inputFromUser);
 
+        if (commandAndOption.command().equals(ValidCommand.PWD.getCommand())) {
+            return new PwdCommand().execute(commandAndOption);
+        } else if (commandAndOption.command().equals(ValidCommand.CD.getCommand())) {
+            return new CdCommand().execute(commandAndOption);
+        } else if (commandAndOption.command().equals(ValidCommand.TYPE.getCommand())) {
+            return new TypeCommand().execute(commandAndOption);
+        } else if (commandAndOption.command().equals(ValidCommand.EXIT.getCommand()))
+            return new ExitCommand().execute(commandAndOption);
+        else if (commandAndOption.command().equals(ValidCommand.ECHO.getCommand())) {
+            String escapeOptions = escapeQuotes(commandAndOption.options());
+            UserInput userInput = new UserInput("", commandAndOption.command(), escapeOptions,
+                    commandAndOption.stdOutFile(), commandAndOption.stdErrFile());
+            return new EchoComand().execute(userInput);
+        } else {
+            String escapeCommand = escapeQuotes(commandAndOption.command());
+            Pair<Boolean, Path> commandIsPresentAndExecutablePair = commandIsPresentAndExecutable(escapeCommand);
+            Boolean isCommandPresentInSysPath = commandIsPresentAndExecutablePair.first();
+            Path path = commandIsPresentAndExecutablePair.second();
+            if (isCommandPresentInSysPath) {
+                UserInput userInput = new UserInput(inputFromUser, path.getFileName().toString(),
+                        commandAndOption.options(), commandAndOption.stdOutFile(), commandAndOption.stdErrFile());
+                return new CustomExecutable().execute(userInput);
+            } else
+                commandNotFound(commandAndOption.userInput());
+        }
+        return true;
+    }
+
+    private static UserInput processUserCommand(String inputFromUser) {
+        String command = "", options = "", stdOutFileName = "", stdErrFileName = "";
+
+        if (inputFromUser.contains("2>")) {
+            String[] split = inputFromUser.split("2>");
+            inputFromUser = split[0].trim();
+            stdErrFileName = split[1].trim();
+        } else if (inputFromUser.contains(">") || inputFromUser.contains("1>")) {
             String[] split = inputFromUser.split(">|1>");
             inputFromUser = split[0].trim();
             stdOutFileName = split[1].trim();
         }
-        if (stdOutFileName != null && !stdOutFileName.isEmpty()) {
+
+        if (!stdOutFileName.isEmpty()) {
             try {
                 System.setOut(new PrintStream(stdOutFileName));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (!stdErrFileName.isEmpty()) {
+            try {
+                System.setErr(new PrintStream(stdErrFileName));
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
@@ -61,10 +99,7 @@ public class Main {
             boolean hasMatch = matcher.find();
             if (hasMatch) {
                 command = matcher.group(0);
-                options = inputFromUser.substring(matcher.end(), inputFromUser.length()).trim();
-            } else {
-                System.out.println("could not process the command");
-                return true;
+                options = inputFromUser.substring(matcher.end()).trim();
             }
         } else if (inputFromUser.startsWith("'")) {
             String regex = "'([^']*)'"; // '([^']*?)'
@@ -72,42 +107,14 @@ public class Main {
             boolean hasMatch = matcher.find();
             if (hasMatch) {
                 command = matcher.group(0);
-                options = inputFromUser.substring(matcher.end(), inputFromUser.length()).trim();
-            } else {
-                System.out.println("could not process the command");
-                return true;
+                options = inputFromUser.substring(matcher.end()).trim();
             }
         } else {
             command = inputFromUser.split(" ")[0];
             options = inputFromUser.replaceFirst(command, "").trim();
         }
 
-        UserInput userInput = new UserInput(command, options, stdOutFileName);
-        if (command.equals(ValidCommand.PWD.getCommand())) {
-            return new PwdCommand().execute(userInput);
-        } else if (command.equals(ValidCommand.CD.getCommand())) {
-            return new CdCommand().execute(userInput);
-        } else if (command.equals(ValidCommand.TYPE.getCommand())) {
-            return new TypeCommand().execute(userInput);
-        } else if (command.equals(ValidCommand.EXIT.getCommand()))
-            return new ExitCommand().execute(userInput);
-        else if (command.equals(ValidCommand.ECHO.getCommand())) {
-            options = escapeQuotes(options);
-            userInput = new UserInput(command,options,stdOutFileName);
-            return new EchoComand().execute(userInput);
-        } else {
-            command = escapeQuotes(command);
-            userInput = new UserInput(command,options,stdOutFileName);
-            Pair<Boolean, Path> commandIsPresentAndExecutablePair = commandIsPresentAndExecutable(command);
-            Boolean isCommandPresentInSysPath = commandIsPresentAndExecutablePair.first();
-            Path path = commandIsPresentAndExecutablePair.second();
-            if (isCommandPresentInSysPath) {
-                userInput = new UserInput(path.getFileName().toString(), options, stdOutFileName);
-                return new CustomExecutable().execute(userInput);
-            } else
-                commandNotFound(inputFromUser);
-        }
-        return true;
+        return new UserInput(inputFromUser, command, options, stdOutFileName, stdErrFileName);
     }
 
     // 'world hello' 'shell''script' example''test
@@ -182,7 +189,8 @@ public class Main {
     private static StringBuilder stringHasNoMatch(StringBuilder copyOptions, StringBuilder escapedOptions, int start) {
         // if the string is of the form : \"test 123"
         StringBuilder temporary = new StringBuilder();
-        if(copyOptions.isEmpty()) return copyOptions;
+        if (copyOptions.isEmpty())
+            return copyOptions;
         copyOptions = new StringBuilder(copyOptions.toString().replaceAll("\\s+", " "));
         for (int i = start; i < copyOptions.length(); i++) {
             char ch = copyOptions.charAt(i);

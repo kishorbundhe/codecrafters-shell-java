@@ -1,5 +1,5 @@
 package commands;
 
-public record UserInput(String command, String options,String stdOutFile) {
-    
+// contains state for user input, command, options,stdout file, stdErrFile
+public record UserInput(String userInput, String command, String options , String stdOutFile, String stdErrFile) {
 }

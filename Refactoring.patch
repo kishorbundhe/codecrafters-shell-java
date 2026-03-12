@@ -1,0 +1,335 @@
+Subject: [PATCH] Refactoring
+---
+Index: src/main/java/commands/UserInput.java
+===================================================================
+diff --git a/src/main/java/commands/UserInput.java b/src/main/java/commands/UserInput.java
+deleted file mode 100644
+--- a/src/main/java/commands/UserInput.java	(revision a79112bbc9554be13209bead3207e086cc3343e6)
++++ /dev/null	(revision a79112bbc9554be13209bead3207e086cc3343e6)
+@@ -1,5 +0,0 @@
+-package commands;
+-
+-public record UserInput(String command, String options,String stdOutFile) {
+-    
+-}
+Index: src/main/java/Main.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/Main.java b/src/main/java/Main.java
+--- a/src/main/java/Main.java	(revision a79112bbc9554be13209bead3207e086cc3343e6)
++++ b/src/main/java/Main.java	(date 1773352072999)
+@@ -8,20 +8,12 @@
+ import java.util.regex.Matcher;
+ import java.util.regex.Pattern;
+ 
+-import commands.CdCommand;
+-import commands.CustomExecutable;
+-import commands.EchoComand;
+-import commands.ExitCommand;
+-import commands.Pair;
+-import commands.PwdCommand;
+-import commands.TypeCommand;
+-import commands.UserInput;
+-import commands.ValidCommand;
++import commands.*;
+ 
+ public class Main {
+     public static void main(String[] args) throws Exception {
+         try (Scanner scanner = new Scanner(System.in)) {
+-            for (;;) {
++            for (; ; ) {
+                 final PrintStream console = System.out;
+                 boolean shouldContinue = shouldContinueRunningCommand(scanner);
+                 if (!System.out.equals(console))
+@@ -36,18 +28,80 @@
+     private static boolean shouldContinueRunningCommand(Scanner scanner) {
+         System.out.print("$ ");
+         String inputFromUser = scanner.nextLine().trim();
+-        String command, options, stdOutFileName = "";
+-
+         if (inputFromUser.isBlank()) {
+             return true;
+         }
++        CommandAndOption commandAndOption = processUserCommand(inputFromUser);
++//        if (inputFromUser.contains(">") || inputFromUser.contains("1>")) {
++//
++//            String[] split = inputFromUser.split(">|1>");
++//            inputFromUser = split[0].trim();
++//            stdOutFileName = split[1].trim();
++//        }
++//        if (stdOutFileName != null && !stdOutFileName.isEmpty()) {
++//            try {
++//                System.setOut(new PrintStream(stdOutFileName));
++//            } catch (FileNotFoundException e) {
++//                e.printStackTrace();
++//            }
++//        }
++//
++//        if (inputFromUser.startsWith("\"")) {
++//            String regex = "\"([^\"]*)\"";
++//            Matcher matcher = Pattern.compile(regex).matcher(inputFromUser);
++//            boolean hasMatch = matcher.find();
++//            if (hasMatch) {
++//                command = matcher.group(0);
++//                options = inputFromUser.substring(matcher.end(), inputFromUser.length()).trim();
++//            }
++//        } else if (inputFromUser.startsWith("'")) {
++//            String regex = "'([^']*)'"; // '([^']*?)'
++//            Matcher matcher = Pattern.compile(regex).matcher(inputFromUser);
++//            boolean hasMatch = matcher.find();
++//            if (hasMatch) {
++//                command = matcher.group(0);
++//                options = inputFromUser.substring(matcher.end(), inputFromUser.length()).trim();
++//            }
++//        } else {
++//            command = inputFromUser.split(" ")[0];
++//            options = inputFromUser.replaceFirst(command, "").trim();
++//        }
++
++        if (commandAndOption.command().equals(ValidCommand.PWD.getCommand())) {
++            return new PwdCommand().execute(commandAndOption);
++        } else if (commandAndOption.command().equals(ValidCommand.CD.getCommand())) {
++            return new CdCommand().execute(commandAndOption);
++        } else if (commandAndOption.command().equals(ValidCommand.TYPE.getCommand())) {
++            return new TypeCommand().execute(commandAndOption);
++        } else if (commandAndOption.command().equals(ValidCommand.EXIT.getCommand()))
++            return new ExitCommand().execute(commandAndOption);
++        else if (commandAndOption.command().equals(ValidCommand.ECHO.getCommand())) {
++            String escapeOptions = escapeQuotes(commandAndOption.options());
++            CommandAndOption userInput = new CommandAndOption("", commandAndOption.command(), escapeOptions, commandAndOption.stdOutFile(), commandAndOption.stdErrFile());
++            return new EchoComand().execute(userInput);
++        } else {
++            String escapeCommand = escapeQuotes(commandAndOption.command());
++            Pair<Boolean, Path> commandIsPresentAndExecutablePair = commandIsPresentAndExecutable(escapeCommand);
++            Boolean isCommandPresentInSysPath = commandIsPresentAndExecutablePair.first();
++            Path path = commandIsPresentAndExecutablePair.second();
++            if (isCommandPresentInSysPath) {
++                CommandAndOption userInput = new CommandAndOption(inputFromUser, path.getFileName().toString(), commandAndOption.options(), commandAndOption.stdOutFile(), commandAndOption.stdErrFile());
++                return new CustomExecutable().execute(userInput);
++            } else
++                commandNotFound(inputFromUser);
++        }
++        return true;
++    }
++
++    private static CommandAndOption processUserCommand(String inputFromUser) {
++        String command = "", options = "", stdOutFileName = "", stdErrFileName = "";
++
+         if (inputFromUser.contains(">") || inputFromUser.contains("1>")) {
+-
+             String[] split = inputFromUser.split(">|1>");
+             inputFromUser = split[0].trim();
+             stdOutFileName = split[1].trim();
+         }
+-        if (stdOutFileName != null && !stdOutFileName.isEmpty()) {
++        if (!stdOutFileName.isEmpty()) {
+             try {
+                 System.setOut(new PrintStream(stdOutFileName));
+             } catch (FileNotFoundException e) {
+@@ -61,10 +115,7 @@
+             boolean hasMatch = matcher.find();
+             if (hasMatch) {
+                 command = matcher.group(0);
+-                options = inputFromUser.substring(matcher.end(), inputFromUser.length()).trim();
+-            } else {
+-                System.out.println("could not process the command");
+-                return true;
++                options = inputFromUser.substring(matcher.end()).trim();
+             }
+         } else if (inputFromUser.startsWith("'")) {
+             String regex = "'([^']*)'"; // '([^']*?)'
+@@ -72,42 +123,14 @@
+             boolean hasMatch = matcher.find();
+             if (hasMatch) {
+                 command = matcher.group(0);
+-                options = inputFromUser.substring(matcher.end(), inputFromUser.length()).trim();
+-            } else {
+-                System.out.println("could not process the command");
+-                return true;
++                options = inputFromUser.substring(matcher.end()).trim();
+             }
+         } else {
+             command = inputFromUser.split(" ")[0];
+             options = inputFromUser.replaceFirst(command, "").trim();
+         }
+ 
+-        UserInput userInput = new UserInput(command, options, stdOutFileName);
+-        if (command.equals(ValidCommand.PWD.getCommand())) {
+-            return new PwdCommand().execute(userInput);
+-        } else if (command.equals(ValidCommand.CD.getCommand())) {
+-            return new CdCommand().execute(userInput);
+-        } else if (command.equals(ValidCommand.TYPE.getCommand())) {
+-            return new TypeCommand().execute(userInput);
+-        } else if (command.equals(ValidCommand.EXIT.getCommand()))
+-            return new ExitCommand().execute(userInput);
+-        else if (command.equals(ValidCommand.ECHO.getCommand())) {
+-            options = escapeQuotes(options);
+-            userInput = new UserInput(command,options,stdOutFileName);
+-            return new EchoComand().execute(userInput);
+-        } else {
+-            command = escapeQuotes(command);
+-            userInput = new UserInput(command,options,stdOutFileName);
+-            Pair<Boolean, Path> commandIsPresentAndExecutablePair = commandIsPresentAndExecutable(command);
+-            Boolean isCommandPresentInSysPath = commandIsPresentAndExecutablePair.first();
+-            Path path = commandIsPresentAndExecutablePair.second();
+-            if (isCommandPresentInSysPath) {
+-                userInput = new UserInput(path.getFileName().toString(), options, stdOutFileName);
+-                return new CustomExecutable().execute(userInput);
+-            } else
+-                commandNotFound(inputFromUser);
+-        }
+-        return true;
++        return new CommandAndOption(inputFromUser, command, options, stdOutFileName, stdErrFileName);
+     }
+ 
+     // 'world hello' 'shell''script' example''test
+@@ -147,8 +170,8 @@
+     }
+ 
+     private static void processBackSlashInsideDoubleQuotes(StringBuilder copyOptions, StringBuilder escapedOptions,
+-            Matcher matcher,
+-            int start) {
++                                                           Matcher matcher,
++                                                           int start) {
+         int i = matcher.start() + 1;
+         int end = matcher.end() - 1;
+         StringBuilder temporary = new StringBuilder();
+@@ -168,7 +191,7 @@
+     }
+ 
+     private static void processBackSlashInsideSingleQuotes(StringBuilder copyOptions, StringBuilder escapedOptions,
+-            Matcher matcher, int start) {
++                                                           Matcher matcher, int start) {
+         escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1);
+         copyOptions.delete(start, matcher.end());
+     }
+@@ -182,7 +205,7 @@
+     private static StringBuilder stringHasNoMatch(StringBuilder copyOptions, StringBuilder escapedOptions, int start) {
+         // if the string is of the form : \"test 123"
+         StringBuilder temporary = new StringBuilder();
+-        if(copyOptions.isEmpty()) return copyOptions;
++        if (copyOptions.isEmpty()) return copyOptions;
+         copyOptions = new StringBuilder(copyOptions.toString().replaceAll("\\s+", " "));
+         for (int i = start; i < copyOptions.length(); i++) {
+             char ch = copyOptions.charAt(i);
+Index: src/main/java/commands/PwdCommand.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/commands/PwdCommand.java b/src/main/java/commands/PwdCommand.java
+--- a/src/main/java/commands/PwdCommand.java	(revision a79112bbc9554be13209bead3207e086cc3343e6)
++++ b/src/main/java/commands/PwdCommand.java	(date 1773352072985)
+@@ -2,7 +2,7 @@
+ 
+ public class PwdCommand implements Command {
+     @Override
+-    public boolean execute(UserInput userInput) {
++    public boolean execute(CommandAndOption userInput) {
+         System.out.println(System.getProperty("user.dir"));
+         return true;
+     }
+Index: src/main/java/commands/CdCommand.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/commands/CdCommand.java b/src/main/java/commands/CdCommand.java
+--- a/src/main/java/commands/CdCommand.java	(revision a79112bbc9554be13209bead3207e086cc3343e6)
++++ b/src/main/java/commands/CdCommand.java	(date 1773352072973)
+@@ -6,7 +6,7 @@
+ public class CdCommand implements Command {
+ 
+     @Override
+-    public boolean execute(UserInput userInput) {
++    public boolean execute(CommandAndOption userInput) {
+         String options = userInput.options();
+         Path newPath;
+         if (options.equalsIgnoreCase("~")) {
+Index: src/main/java/commands/CustomExecutable.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/commands/CustomExecutable.java b/src/main/java/commands/CustomExecutable.java
+--- a/src/main/java/commands/CustomExecutable.java	(revision a79112bbc9554be13209bead3207e086cc3343e6)
++++ b/src/main/java/commands/CustomExecutable.java	(date 1773352072976)
+@@ -12,7 +12,7 @@
+ 
+ public class CustomExecutable implements Command {
+     @Override
+-    public boolean execute(UserInput userInput) {
++    public boolean execute(CommandAndOption userInput) {
+         String command = userInput.command();
+         String options = userInput.options();
+         String stdFileName = userInput.stdOutFile();
+Index: src/main/java/commands/Command.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/commands/Command.java b/src/main/java/commands/Command.java
+--- a/src/main/java/commands/Command.java	(revision a79112bbc9554be13209bead3207e086cc3343e6)
++++ b/src/main/java/commands/Command.java	(date 1773352073002)
+@@ -8,7 +8,7 @@
+ import java.util.Optional;
+ 
+ public interface Command {
+-    boolean execute(UserInput userInput);
++    boolean execute(CommandAndOption userInput);
+ 
+     public static Pair<Boolean, Path> commandIsPresentAndExecutable(String command) {
+         // get the env PATH variable and check if the command exists in any of the
+Index: src/main/java/commands/TypeCommand.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/commands/TypeCommand.java b/src/main/java/commands/TypeCommand.java
+--- a/src/main/java/commands/TypeCommand.java	(revision a79112bbc9554be13209bead3207e086cc3343e6)
++++ b/src/main/java/commands/TypeCommand.java	(date 1773352072989)
+@@ -4,7 +4,7 @@
+ 
+ public class TypeCommand implements Command {
+     @Override
+-    public boolean execute(UserInput userInput) {
++    public boolean execute(CommandAndOption userInput) {
+         String options = userInput.options();
+         // since command = type, we need to check if options is a valid command
+         if (!ValidCommand.isValidCommand(options)) {
+Index: src/main/java/commands/ExitCommand.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/commands/ExitCommand.java b/src/main/java/commands/ExitCommand.java
+--- a/src/main/java/commands/ExitCommand.java	(revision a79112bbc9554be13209bead3207e086cc3343e6)
++++ b/src/main/java/commands/ExitCommand.java	(date 1773352072983)
+@@ -2,7 +2,7 @@
+ 
+ public class ExitCommand implements Command {
+     @Override
+-    public boolean execute(UserInput userInput) {
++    public boolean execute(CommandAndOption userInput) {
+     
+         return false; // returning false to indicate that the shell should exit
+     }
+Index: src/main/java/commands/EchoComand.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/commands/EchoComand.java b/src/main/java/commands/EchoComand.java
+--- a/src/main/java/commands/EchoComand.java	(revision a79112bbc9554be13209bead3207e086cc3343e6)
++++ b/src/main/java/commands/EchoComand.java	(date 1773352072980)
+@@ -1,7 +1,7 @@
+ package commands;
+ public class EchoComand implements Command {
+     @Override
+-    public boolean execute(UserInput userInput) {
++    public boolean execute(CommandAndOption userInput) {
+         String options = userInput.options();
+         //options = options.replaceAll("^\"|\"$", ""); // remove surrounding quotes if present
+         System.out.println(options);
