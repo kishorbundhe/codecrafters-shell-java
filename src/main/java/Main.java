@@ -93,10 +93,11 @@ public class Main {
             return new ExitCommand().execute(userInput);
         else if (command.equals(ValidCommand.ECHO.getCommand())) {
             options = escapeQuotes(options);
+            userInput = new UserInput(command,options,stdOutFileName);
             return new EchoComand().execute(userInput);
         } else {
             command = escapeQuotes(command);
-
+            userInput = new UserInput(command,options,stdOutFileName);
             Pair<Boolean, Path> commandIsPresentAndExecutablePair = commandIsPresentAndExecutable(command);
             Boolean isCommandPresentInSysPath = commandIsPresentAndExecutablePair.first();
             Path path = commandIsPresentAndExecutablePair.second();
@@ -181,6 +182,7 @@ public class Main {
     private static StringBuilder stringHasNoMatch(StringBuilder copyOptions, StringBuilder escapedOptions, int start) {
         // if the string is of the form : \"test 123"
         StringBuilder temporary = new StringBuilder();
+        if(copyOptions.isEmpty()) return copyOptions;
         copyOptions = new StringBuilder(copyOptions.toString().replaceAll("\\s+", " "));
         for (int i = start; i < copyOptions.length(); i++) {
             char ch = copyOptions.charAt(i);
