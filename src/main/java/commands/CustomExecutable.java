@@ -1,5 +1,6 @@
 package commands;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,7 +12,10 @@ import java.util.stream.Stream;
 
 public class CustomExecutable implements Command {
     @Override
-    public boolean execute(String command, String options) {
+    public boolean execute(UserInput userInput) {
+        String command = userInput.command();
+        String options = userInput.options();
+        String stdFileName = userInput.stdOutFile();
         List<String> args;
         if (command.equalsIgnoreCase("cat")) {
             args = getCatCommandAndFiles(command, options);
@@ -20,7 +24,11 @@ public class CustomExecutable implements Command {
         }
 
         ProcessBuilder processBuilder = new ProcessBuilder(args);
+
         processBuilder.inheritIO();
+        if(stdFileName!=null&& !stdFileName.isEmpty()){
+            processBuilder.redirectOutput(new File(stdFileName));
+        }
         try {
             Process process = processBuilder.start();
             process.waitFor();

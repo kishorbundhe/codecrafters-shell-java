@@ -4,7 +4,8 @@ import java.nio.file.Path;
 
 public class TypeCommand implements Command {
     @Override
-    public boolean execute(String command, String options) {
+    public boolean execute(UserInput userInput) {
+        String options = userInput.options();
         // since command = type, we need to check if options is a valid command
         if (!ValidCommand.isValidCommand(options)) {
 

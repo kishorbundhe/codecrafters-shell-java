@@ -15,6 +15,7 @@ import commands.ExitCommand;
 import commands.Pair;
 import commands.PwdCommand;
 import commands.TypeCommand;
+import commands.UserInput;
 import commands.ValidCommand;
 
 public class Main {
@@ -81,17 +82,18 @@ public class Main {
             options = inputFromUser.replaceFirst(command, "").trim();
         }
 
+        UserInput userInput = new UserInput(command, options, stdOutFileName);
         if (command.equals(ValidCommand.PWD.getCommand())) {
-            return new PwdCommand().execute(command, options);
+            return new PwdCommand().execute(userInput);
         } else if (command.equals(ValidCommand.CD.getCommand())) {
-            return new CdCommand().execute(command, options);
+            return new CdCommand().execute(userInput);
         } else if (command.equals(ValidCommand.TYPE.getCommand())) {
-            return new TypeCommand().execute(command, options);
+            return new TypeCommand().execute(userInput);
         } else if (command.equals(ValidCommand.EXIT.getCommand()))
-            return new ExitCommand().execute(command, options);
+            return new ExitCommand().execute(userInput);
         else if (command.equals(ValidCommand.ECHO.getCommand())) {
             options = escapeQuotes(options);
-            return new EchoComand().execute(command, options);
+            return new EchoComand().execute(userInput);
         } else {
             command = escapeQuotes(command);
 
@@ -99,7 +101,8 @@ public class Main {
             Boolean isCommandPresentInSysPath = commandIsPresentAndExecutablePair.first();
             Path path = commandIsPresentAndExecutablePair.second();
             if (isCommandPresentInSysPath) {
-                return new CustomExecutable().execute(path.getFileName().toString(), options);
+                userInput = new UserInput(path.getFileName().toString(), options, stdOutFileName);
+                return new CustomExecutable().execute(userInput);
             } else
                 commandNotFound(inputFromUser);
         }
@@ -111,8 +114,8 @@ public class Main {
 
         String regex = "(?<!\\\\)\"((?:\\\\.|[^\"\\\\])*)\"(?!\\\\)|(?<!\\\\)'([^']*?)'(?!\\\\)";
         Pattern pattern = Pattern.compile(regex);
-        options.replaceAll("\"\"", "");
-        options.replaceAll("\'\'", "");
+        options = options.replaceAll("\"\"", "");
+        options = options.replaceAll("\'\'", "");
         StringBuilder copyOptions = new StringBuilder(options);
         StringBuilder escapedOptions = new StringBuilder();
         while (true) {

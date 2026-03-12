@@ -8,7 +8,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 public interface Command {
-    boolean execute(String command, String options);
+    boolean execute(UserInput userInput);
 
     public static Pair<Boolean, Path> commandIsPresentAndExecutable(String command) {
         // get the env PATH variable and check if the command exists in any of the

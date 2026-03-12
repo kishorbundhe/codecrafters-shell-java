@@ -6,7 +6,8 @@ import java.nio.file.Path;
 public class CdCommand implements Command {
 
     @Override
-    public boolean execute(String command, String options) {
+    public boolean execute(UserInput userInput) {
+        String options = userInput.options();
         Path newPath;
         if (options.equalsIgnoreCase("~")) {
             newPath = Path.of(System.getenv("HOME"));
