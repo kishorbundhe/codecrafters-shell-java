@@ -14,7 +14,7 @@ import commands.*;
 public class Main {
     public static void main(String[] args) throws Exception {
         try (Scanner scanner = new Scanner(System.in)) {
-            for (; ; ) {
+            for (;;) {
                 final PrintStream console = System.out;
                 boolean shouldContinue = shouldContinueRunningCommand(scanner);
                 if (!System.out.equals(console))
@@ -68,7 +68,13 @@ public class Main {
     private static UserInput processUserCommand(String inputFromUser) {
         String command = "", options = "", stdOutFileName = "", stdErrFileName = "";
         boolean stdOutAppend = false;
-        if (inputFromUser.contains("2>")) {
+        boolean stdErrAppend = false;
+        if (inputFromUser.contains("2>>")) {
+            String[] split = inputFromUser.split("2>>");
+            inputFromUser = split[0].trim();
+            stdErrFileName = split[1].trim();
+            stdErrAppend = true;
+        } else if (inputFromUser.contains("2>")) {
             String[] split = inputFromUser.split("2>");
             inputFromUser = split[0].trim();
             stdErrFileName = split[1].trim();
@@ -94,7 +100,8 @@ public class Main {
 
         if (!stdErrFileName.isEmpty()) {
             try {
-                System.setErr(new PrintStream(stdErrFileName));
+                FileOutputStream fileErrorStream = new FileOutputStream(stdErrFileName, stdErrAppend);
+                System.setErr(new PrintStream(fileErrorStream));
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
@@ -122,7 +129,7 @@ public class Main {
         }
 
         return new UserInput(inputFromUser, command, options, new StdOutFile(stdOutFileName, stdOutAppend),
-                stdErrFileName);
+                new StdErrFile(stdErrFileName, stdErrAppend));
     }
 
     // 'world hello' 'shell''script' example''test
@@ -162,8 +169,8 @@ public class Main {
     }
 
     private static void processBackSlashInsideDoubleQuotes(StringBuilder copyOptions, StringBuilder escapedOptions,
-                                                           Matcher matcher,
-                                                           int start) {
+            Matcher matcher,
+            int start) {
         int i = matcher.start() + 1;
         int end = matcher.end() - 1;
         StringBuilder temporary = new StringBuilder();
@@ -183,7 +190,7 @@ public class Main {
     }
 
     private static void processBackSlashInsideSingleQuotes(StringBuilder copyOptions, StringBuilder escapedOptions,
-                                                           Matcher matcher, int start) {
+            Matcher matcher, int start) {
         escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1);
         copyOptions.delete(start, matcher.end());
     }

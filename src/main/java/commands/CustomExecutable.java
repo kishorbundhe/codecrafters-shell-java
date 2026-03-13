@@ -17,7 +17,8 @@ public class CustomExecutable implements Command {
         String options = userInput.options();
         String stdFileName = userInput.stdOutFile().stdOutFile();
         boolean stdOutAppend = userInput.stdOutFile().append();
-        String stdErrFileName = userInput.stdErrFile();
+        String stdErrFileName = userInput.stdErrFile().stdErrFile();
+        boolean stdErrAppend = userInput.stdErrFile().append();
         List<String> args;
         if (command.equalsIgnoreCase("cat")) {
             args = getCatCommandAndFiles(command, options);
@@ -35,10 +36,13 @@ public class CustomExecutable implements Command {
                 processBuilder.redirectOutput(new File(stdFileName));
             }
 
-
         }
         if (stdErrFileName != null && !stdErrFileName.isEmpty()) {
-            processBuilder.redirectError(new File(stdErrFileName));
+            if (stdErrAppend) {
+                processBuilder.redirectError(ProcessBuilder.Redirect.appendTo(new File(stdErrFileName)));
+            } else {
+                processBuilder.redirectError(new File(stdErrFileName));
+            }
         }
         try {
             Process process = processBuilder.start();
@@ -51,8 +55,8 @@ public class CustomExecutable implements Command {
 
     private List<String> getCommandArgs(String command, String options) {
         return Stream.concat(
-                        Stream.of(command),
-                        Arrays.stream(options.split(" ")))
+                Stream.of(command),
+                Arrays.stream(options.split(" ")))
                 .collect(Collectors.toList());
     }
 
@@ -60,8 +64,8 @@ public class CustomExecutable implements Command {
         List<String> args;
         ArrayList<String> files = escapeQuotes(options);
         args = Stream.concat(
-                        Stream.of(command),
-                        files.stream())
+                Stream.of(command),
+                files.stream())
                 .collect(Collectors.toList());
         return args;
     }
@@ -116,8 +120,8 @@ public class CustomExecutable implements Command {
     }
 
     private void processBackSlashInsideDoubleQuotes(ArrayList<String> files, StringBuilder copyOptions, Matcher matcher,
-                                                    int start,
-                                                    StringBuilder escapedOptions) {
+            int start,
+            StringBuilder escapedOptions) {
         int i = matcher.start() + 1;
         int end = matcher.end() - 1;
         StringBuilder temporary = new StringBuilder();
@@ -138,8 +142,8 @@ public class CustomExecutable implements Command {
     }
 
     private void processBackSlashInsideSingleQuotes(ArrayList<String> files, StringBuilder copyOptions, Matcher matcher,
-                                                    int start,
-                                                    StringBuilder escapedOptions) {
+            int start,
+            StringBuilder escapedOptions) {
         files.add(escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1).toString());
         copyOptions.delete(start, matcher.end());
     }
