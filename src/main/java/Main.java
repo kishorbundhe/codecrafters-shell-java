@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
@@ -32,16 +33,19 @@ import commands.ValidCommand;
 public class Main {
     public static void main(String[] args) throws Exception {
         try {
-            Terminal terminal = TerminalBuilder.builder().system(true).build();
+            Terminal terminal = TerminalBuilder.terminal();
             Collection<String> dynamicStrings = getCurrentCommands();
             Completer dynamicCompleter = new StringsCompleter(dynamicStrings);
             LineReader reader = LineReaderBuilder.builder()
             .terminal(terminal)
+                    .parser(new WindowsPathAwareParser())
             .completer(dynamicCompleter)
             .option(LineReader.Option.AUTO_LIST, true) // Automatically list options
             .option(LineReader.Option.LIST_PACKED, true) // Display completions in a compact form
             .option(LineReader.Option.AUTO_MENU, true) // Show menu automatically
             .option(LineReader.Option.MENU_COMPLETE, true) // Cycle through completions
+            .option(LineReader.Option.AUTO_REMOVE_SLASH, false) // Cycle through completions
+            .option(LineReader.Option.AUTO_PARAM_SLASH, false) // Cycle through completions
             .build();
             final PrintStream console = System.out;
             for (;;) {
@@ -74,6 +78,7 @@ public class Main {
         if (inputFromUser.isBlank()) {
             return true;
         }
+        
         UserInput commandAndOption = processUserCommand(inputFromUser);
 
         if (commandAndOption.command().equals(ValidCommand.PWD.getCommand())) {
