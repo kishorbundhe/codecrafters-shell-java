@@ -3,20 +3,50 @@ import static commands.Command.commandNotFound;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.util.Scanner;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import commands.*;
+import org.jline.reader.Completer;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.impl.completer.StringsCompleter;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
+import commands.CdCommand;
+import commands.CustomExecutable;
+import commands.EchoComand;
+import commands.ExitCommand;
+import commands.Pair;
+import commands.PwdCommand;
+import commands.StdErrFile;
+import commands.StdOutFile;
+import commands.TypeCommand;
+import commands.UserInput;
+import commands.ValidCommand;
 public class Main {
     public static void main(String[] args) throws Exception {
-        try (Scanner scanner = new Scanner(System.in)) {
+        try {
+            Terminal terminal = TerminalBuilder.builder().system(true).build();
+            Collection<String> dynamicStrings = getCurrentCommands();
+            Completer dynamicCompleter = new StringsCompleter(dynamicStrings);
+            LineReader reader = LineReaderBuilder.builder()
+            .terminal(terminal)
+            .completer(dynamicCompleter)
+            .option(LineReader.Option.AUTO_LIST, true) // Automatically list options
+            .option(LineReader.Option.LIST_PACKED, true) // Display completions in a compact form
+            .option(LineReader.Option.AUTO_MENU, true) // Show menu automatically
+            .option(LineReader.Option.MENU_COMPLETE, true) // Cycle through completions
+            .build();
+            final PrintStream console = System.out;
             for (;;) {
-                final PrintStream console = System.out;
-                boolean shouldContinue = shouldContinueRunningCommand(scanner);
+
+                boolean shouldContinue = shouldContinueRunningCommand(reader);
                 if (!System.out.equals(console))
                     System.setOut(console);
                 if (!System.err.equals(console)) {
@@ -26,12 +56,21 @@ public class Main {
                     break;
                 }
             }
+
+            terminal.close();
+        } catch (IOException e) {
+            System.err.println("Error creating terminal: " + e.getMessage());
         }
     }
 
-    private static boolean shouldContinueRunningCommand(Scanner scanner) {
-        System.out.print("$ ");
-        String inputFromUser = scanner.nextLine().trim();
+    private static Collection<String> getCurrentCommands() {
+        // In a real application, this might fetch commands from a registry
+        return Arrays.asList("echo", "exit", "status", "help");
+    }
+
+    private static boolean shouldContinueRunningCommand(LineReader reader) {
+       // System.out.print("$ ");
+        String inputFromUser = reader.readLine("$ ").trim();
         if (inputFromUser.isBlank()) {
             return true;
         }
