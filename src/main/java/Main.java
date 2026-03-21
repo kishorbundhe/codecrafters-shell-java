@@ -1,20 +1,24 @@
 import static commands.Command.commandIsPresentAndExecutable;
 import static commands.Command.commandNotFound;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
-import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
@@ -30,23 +34,14 @@ import commands.StdOutFile;
 import commands.TypeCommand;
 import commands.UserInput;
 import commands.ValidCommand;
+
 public class Main {
     public static void main(String[] args) throws Exception {
         try {
             Terminal terminal = TerminalBuilder.terminal();
             Collection<String> dynamicStrings = getCurrentCommands();
             Completer dynamicCompleter = new StringsCompleter(dynamicStrings);
-            LineReader reader = LineReaderBuilder.builder()
-            .terminal(terminal)
-                    .parser(new WindowsPathAwareParser())
-            .completer(dynamicCompleter)
-            .option(LineReader.Option.AUTO_LIST, true) // Automatically list options
-            .option(LineReader.Option.LIST_PACKED, true) // Display completions in a compact form
-            .option(LineReader.Option.AUTO_MENU, true) // Show menu automatically
-            .option(LineReader.Option.MENU_COMPLETE, true) // Cycle through completions
-            .option(LineReader.Option.AUTO_REMOVE_SLASH, false) // Cycle through completions
-            .option(LineReader.Option.AUTO_PARAM_SLASH, false) // Cycle through completions
-            .build();
+            LineReader reader = configureLineReader(terminal, dynamicCompleter);
             final PrintStream console = System.out;
             for (;;) {
 
@@ -67,18 +62,59 @@ public class Main {
         }
     }
 
+    private static LineReader configureLineReader(Terminal terminal, Completer dynamicCompleter) {
+        return LineReaderBuilder.builder()
+                .terminal(terminal)
+                .parser(new DisableEscapingChars())
+                .completer(dynamicCompleter)
+                .option(LineReader.Option.AUTO_LIST, true) // Automatically list options+
+                .option(LineReader.Option.LIST_PACKED, true) // Display completions in a compact form
+                .option(LineReader.Option.AUTO_MENU, true) // Show menu automatically
+                .option(LineReader.Option.MENU_COMPLETE, true) // Cycle through completions
+                .option(LineReader.Option.AUTO_REMOVE_SLASH, false) // Cycle through completions
+                .option(LineReader.Option.AUTO_PARAM_SLASH, false) // Cycle through completions
+                .build();
+    }
+
     private static Collection<String> getCurrentCommands() {
-        // In a real application, this might fetch commands from a registry
-        return Arrays.asList("echo", "exit", "status", "help");
+        String path = System.getenv("PATH");
+        String[] directories = path.split(File.pathSeparator);
+        List<String> commandsFromPath = new ArrayList<>();
+
+        for (String dir : directories) {
+            // list all files in the directory and check if the command exists
+            Path dirPath = Paths.get(dir);
+            boolean isDirectory = Files.isDirectory(dirPath);
+            if (isDirectory) {
+                try {
+                    List<String> temp = Files.list(dirPath)
+                            .filter(file -> Files.isExecutable(file))
+                            .map(file -> file.getFileName().toString())
+                            .collect(Collectors.toList());
+                    commandsFromPath.addAll(temp);
+
+                } catch (IOException e) {
+
+                    e.printStackTrace();
+                }
+            }
+
+        }
+        List<String> defaultCommands = new ArrayList<>();
+        for (ValidCommand values : ValidCommand.values()) {
+            defaultCommands.add(values.getCommand());
+        }
+        defaultCommands.addAll(commandsFromPath);
+        return defaultCommands;
     }
 
     private static boolean shouldContinueRunningCommand(LineReader reader) {
-       // System.out.print("$ ");
+        // System.out.print("$ ");
         String inputFromUser = reader.readLine("$ ").trim();
         if (inputFromUser.isBlank()) {
             return true;
         }
-        
+
         UserInput commandAndOption = processUserCommand(inputFromUser);
 
         if (commandAndOption.command().equals(ValidCommand.PWD.getCommand())) {
