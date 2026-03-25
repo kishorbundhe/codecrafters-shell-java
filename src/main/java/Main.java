@@ -90,7 +90,7 @@ public class Main {
                 tabCount.incrementAndGet();
             } else if (tabCount.get() == 1 && istab) {
                 lineReader.getTerminal().writer().println();
-                for (String complete : uniqueCandidates) {
+                for (String complete : matchedCandidates) {
                     terminal.writer()
                             .print(complete + "  ");
                 }
