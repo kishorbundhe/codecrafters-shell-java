@@ -72,7 +72,7 @@ public class Main {
 
             boolean istab = lineReader.getLastBinding().equals("\t");
             List<Candidate> candidates = new ArrayList<>();
-            String wordUserHastyped = lineReader.getBuffer().toString();
+            final String wordUserHastyped = lineReader.getBuffer().toString();
             dynamicCompleter.complete(lineReader, lineReader.getParsedLine(), candidates);
             Set<String> uniqueCandidates = candidates
                     .stream()
@@ -92,6 +92,8 @@ public class Main {
                 
                 // terminal.writer().println(list);
                 // terminal.writer().flush();
+                System.out.println(lineReader.getBuffer().toString());
+                System.out.println(wordUserHastyped);
                 lineReader.getTerminal().writer().println();
                 tabCount.incrementAndGet();
             } else {
