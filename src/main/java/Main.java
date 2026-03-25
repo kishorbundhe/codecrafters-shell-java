@@ -90,11 +90,12 @@ public class Main {
                 tabCount.incrementAndGet();
             } else if (tabCount.get() == 1 && istab) {
                 lineReader.getTerminal().writer().println();
-                StringBuffer buffer = new StringBuffer();
-                matchedCandidates.forEach(str -> buffer.append(str).append("  "));
-                String str = buffer.toString().trim();
-                //lineReader.getTerminal().writer().println(str);
-                lineReader.getTerminal().writer().print(str);
+                for (String complete : uniqueCandidates) {
+                    terminal.writer()
+                            .print(complete + "  ");
+                }
+                // lineReader.getTerminal().writer().println(str);
+            
                 lineReader.getTerminal().flush();
                 lineReader.callWidget(LineReader.REDRAW_LINE);
                 lineReader.callWidget(LineReader.REDISPLAY);
