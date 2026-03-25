@@ -84,18 +84,7 @@ public class Main {
             if (istab && matchedCandidates.size() > 1 && tabCount.get() == 0) {
                 lineReader.callWidget(BEEP);
                 tabCount.incrementAndGet();
-            } else if (tabCount.get() == 1) {
-                // StringBuffer list = new StringBuffer();
-                // for (String s : matchedCandidates) {
-                //     list.append(s).append("  ");
-                // }
-                
-                // terminal.writer().println(list);
-                // terminal.writer().flush();
-                System.out.println(" lineReader.getBuffer().toString() "+lineReader.getBuffer().toString());
-                System.out.println("wordUserHastyped "+wordUserHastyped);
-                lineReader.getTerminal().writer().println();
-                tabCount.incrementAndGet();
+
             } else {
               
                 lineReader.callWidget(LineReader.EXPAND_OR_COMPLETE);
