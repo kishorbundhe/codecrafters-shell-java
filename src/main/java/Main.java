@@ -84,7 +84,10 @@ public class Main {
             if (matchedCandidates.isEmpty()) {
                 lineReader.callWidget(BEEP);
 
-            } else if (istab && matchedCandidates.size() > 1 && tabCount.get() == 0) {
+            } else if(matchedCandidates.size()==1){
+                lineReader.callWidget(EXPAND_OR_COMPLETE);
+            }
+            else if (istab && matchedCandidates.size() > 1 && tabCount.get() == 0) {
                 lineReader.callWidget(BEEP);
                 tabCount.incrementAndGet();
             } else if (tabCount.get() == 1 && istab) {
@@ -93,7 +96,7 @@ public class Main {
                     terminal.writer()
                             .print(complete + "  ");
                 }
-                // lineReader.getTerminal().writer().println(str);
+            
                 lineReader.getTerminal().writer().println();
                 lineReader.getTerminal().flush();
                 lineReader.callWidget(LineReader.REDRAW_LINE);
