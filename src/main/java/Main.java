@@ -92,8 +92,8 @@ public class Main {
                 
                 // terminal.writer().println(list);
                 // terminal.writer().flush();
-                terminal.writer()
-                        .println(((LineReaderImpl) lineReader).getDisplayedBufferWithPrompts(Collections.emptyList()));
+                // terminal.writer()
+                //         .println(((LineReaderImpl) lineReader).getDisplayedBufferWithPrompts(Collections.emptyList()));
 
                 tabCount.incrementAndGet();
             } else {
