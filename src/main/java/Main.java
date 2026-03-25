@@ -136,10 +136,6 @@ public class Main {
             defaultCommands.add(values.getCommand());
         }
 
-        defaultCommands.add("xyz_tmp");
-        defaultCommands.add("xyz_cow");
-        defaultCommands.add("xyz_beep");
-
         defaultCommands.addAll(commandsFromPath);
         Collections.sort(defaultCommands);
         return defaultCommands;
