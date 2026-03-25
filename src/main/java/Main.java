@@ -138,9 +138,7 @@ public class Main {
         for (ValidCommand values : ValidCommand.values()) {
             defaultCommands.add(values.getCommand());
         }
-        defaultCommands.add("xyz_cow");
-        defaultCommands.add("xyz_bee");
-        defaultCommands.add("xyz_tow");
+    
 
         defaultCommands.addAll(commandsFromPath);
         Collections.sort(defaultCommands);
