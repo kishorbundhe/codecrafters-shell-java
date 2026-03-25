@@ -86,13 +86,14 @@ public class Main {
 
             } else if (istab && matchedCandidates.size() > 1 && tabCount.get() == 0) {
                 lineReader.callWidget(BEEP);
+                lineReader.getTerminal().flush();
                 tabCount.incrementAndGet();
             } else if (tabCount.get() == 1 && istab) {
                 lineReader.getTerminal().writer().println();
                 StringBuffer buffer = new StringBuffer();
                 matchedCandidates.forEach(str -> buffer.append(str).append("  "));
                 String str = buffer.toString().trim();
-                lineReader.getTerminal().writer().println(str);
+                //lineReader.getTerminal().writer().println(str);
                 lineReader.getTerminal().writer().print("$ " + str);
                 lineReader.getTerminal().flush();
                 lineReader.callWidget(LineReader.REDRAW_LINE);
