@@ -97,8 +97,6 @@ public class Main {
                 lineReader.getTerminal().writer().println();
                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
                     terminal.writer().print(matchedCandidates.getFirst());
-                    lineReader.getBuffer().clear();
-                    lineReader.getBuffer().write(matchedCandidates.getFirst());
                 } else {
                     for (String complete : matchedCandidates) {
                         terminal.writer()
@@ -143,6 +141,10 @@ public class Main {
         for (ValidCommand values : ValidCommand.values()) {
             defaultCommands.add(values.getCommand());
         }
+
+//        defaultCommands.add("xyz_fox");
+//        defaultCommands.add("xyz_fox_ant");
+//        defaultCommands.add("xyz_fox_ant_dog");
 
         defaultCommands.addAll(commandsFromPath);
         Collections.sort(defaultCommands);
