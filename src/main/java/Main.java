@@ -94,7 +94,7 @@ public class Main {
                             .print(complete + "  ");
                 }
                 // lineReader.getTerminal().writer().println(str);
-            
+                lineReader.getTerminal().writer().println();
                 lineReader.getTerminal().flush();
                 lineReader.callWidget(LineReader.REDRAW_LINE);
                 lineReader.callWidget(LineReader.REDISPLAY);
