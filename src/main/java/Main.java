@@ -76,22 +76,22 @@ public class Main {
             dynamicCompleter.complete(lineReader, lineReader.getParsedLine(), candidates);
             Set<String> uniqueCandidates = candidates
                     .stream()
+                    .sorted()
                     .map(Candidate::value).collect(Collectors.toSet());
-            List<String> matchedCandidates = uniqueCandidates.stream()
+            List<String> matchedCandidates = uniqueCandidates.stream().sorted()
                     .filter(candidate -> candidate.toLowerCase().startsWith(wordUserHastyped.toLowerCase()))
                     .toList();
             if (istab && matchedCandidates.size() > 1 && tabCount.get() == 0) {
                 lineReader.callWidget(BEEP);
-                
                 tabCount.incrementAndGet();
             } else if (tabCount.get() == 1) {
-                StringBuffer list = new StringBuffer();
-                for (String s : matchedCandidates) {
-                    list.append(s).append("  ");
-                }
+                // StringBuffer list = new StringBuffer();
+                // for (String s : matchedCandidates) {
+                //     list.append(s).append("  ");
+                // }
                 
-                terminal.writer().println(list);
-                terminal.writer().flush();
+                // terminal.writer().println(list);
+                // terminal.writer().flush();
                 terminal.writer()
                         .println(((LineReaderImpl) lineReader).getDisplayedBufferWithPrompts(Collections.emptyList()));
 
