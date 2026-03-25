@@ -94,7 +94,7 @@ public class Main {
                 matchedCandidates.forEach(str -> buffer.append(str).append("  "));
                 String str = buffer.toString().trim();
                 //lineReader.getTerminal().writer().println(str);
-                lineReader.getTerminal().writer().print("$ " + str);
+                lineReader.getTerminal().writer().print(str);
                 lineReader.getTerminal().flush();
                 lineReader.callWidget(LineReader.REDRAW_LINE);
                 lineReader.callWidget(LineReader.REDISPLAY);
