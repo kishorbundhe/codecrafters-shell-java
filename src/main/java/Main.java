@@ -97,7 +97,7 @@ public class Main {
                 lineReader.getTerminal().flush();
                 lineReader.callWidget(LineReader.REDRAW_LINE);
                 lineReader.callWidget(LineReader.REDISPLAY);
-                
+                tabCount.set(0);
             }
             return true;
         };
