@@ -86,7 +86,6 @@ public class Main {
 
             } else if (istab && matchedCandidates.size() > 1 && tabCount.get() == 0) {
                 lineReader.callWidget(BEEP);
-                lineReader.getTerminal().flush();
                 tabCount.incrementAndGet();
             } else if (tabCount.get() == 1 && istab) {
                 lineReader.getTerminal().writer().println();
