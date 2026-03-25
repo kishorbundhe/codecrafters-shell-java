@@ -134,9 +134,6 @@ public class Main {
 
         }
         List<String> defaultCommands = new ArrayList<>();
-        defaultCommands.add("xyz_cow");
-        defaultCommands.add("xyz_dog");
-        defaultCommands.add("xyz_fox");
         for (ValidCommand values : ValidCommand.values()) {
             defaultCommands.add(values.getCommand());
         }
