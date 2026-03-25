@@ -92,7 +92,7 @@ public class Main {
                 
                 // terminal.writer().println(list);
                 // terminal.writer().flush();
-                terminal.writer().flush();
+                lineReader.getTerminal().writer().println();
                 tabCount.incrementAndGet();
             } else {
               
