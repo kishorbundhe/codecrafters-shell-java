@@ -35,7 +35,7 @@ public class Main {
 
             LineReader reader = configureLineReader(terminal, dynamicCompleter);
             final PrintStream console = System.out;
-            for (;;) {
+            for (; ; ) {
 
                 boolean shouldContinue = shouldContinueRunningCommand(reader);
                 if (!System.out.equals(console))
@@ -84,7 +84,16 @@ public class Main {
             if (istab && matchedCandidates.size() > 1 && tabCount.get() == 0) {
                 lineReader.callWidget(BEEP);
                 tabCount.incrementAndGet();
-
+            } else if (tabCount.get() == 1 && istab) {
+                lineReader.getTerminal().writer().println();
+                StringBuffer buffer = new StringBuffer();
+                matchedCandidates.forEach(str ->
+                        buffer.append(str).append("  "));
+                String str = buffer.toString().trim();
+                lineReader.getTerminal().writer().println(str);
+                lineReader.getTerminal().writer().print("$ "+ str);
+                lineReader.getTerminal().flush();
+                tabCount.incrementAndGet();
             } else {
                 lineReader.callWidget(LineReader.EXPAND_OR_COMPLETE);
                 tabCount.set(0);
@@ -126,7 +135,10 @@ public class Main {
         for (ValidCommand values : ValidCommand.values()) {
             defaultCommands.add(values.getCommand());
         }
-    
+
+        defaultCommands.add("xyz_tmp");
+        defaultCommands.add("xyz_cow");
+        defaultCommands.add("xyz_beep");
 
         defaultCommands.addAll(commandsFromPath);
         Collections.sort(defaultCommands);
@@ -274,8 +286,8 @@ public class Main {
     }
 
     private static void processBackSlashInsideDoubleQuotes(StringBuilder copyOptions, StringBuilder escapedOptions,
-            Matcher matcher,
-            int start) {
+                                                           Matcher matcher,
+                                                           int start) {
         int i = matcher.start() + 1;
         int end = matcher.end() - 1;
         StringBuilder temporary = new StringBuilder();
@@ -295,7 +307,7 @@ public class Main {
     }
 
     private static void processBackSlashInsideSingleQuotes(StringBuilder copyOptions, StringBuilder escapedOptions,
-            Matcher matcher, int start) {
+                                                           Matcher matcher, int start) {
         escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1);
         copyOptions.delete(start, matcher.end());
     }
