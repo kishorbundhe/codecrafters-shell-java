@@ -92,8 +92,8 @@ public class Main {
                 
                 // terminal.writer().println(list);
                 // terminal.writer().flush();
-                System.out.println(lineReader.getBuffer().toString());
-                System.out.println(wordUserHastyped);
+                System.out.println(" lineReader.getBuffer().toString() "+lineReader.getBuffer().toString());
+                System.out.println("wordUserHastyped "+wordUserHastyped);
                 lineReader.getTerminal().writer().println();
                 tabCount.incrementAndGet();
             } else {
