@@ -1,3 +1,5 @@
+package lineReader;
+
 import org.jline.reader.impl.DefaultParser;
 
 public class DisableEscapingChars extends DefaultParser {

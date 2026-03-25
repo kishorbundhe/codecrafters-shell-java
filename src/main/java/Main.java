@@ -1,5 +1,6 @@
 import static commands.Command.commandIsPresentAndExecutable;
 import static commands.Command.commandNotFound;
+import static org.jline.reader.LineReader.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -11,14 +12,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.jline.reader.Completer;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
+import lineReader.CustomCompletionMatcher;
+import lineReader.DisableEscapingChars;
+import org.jline.keymap.KeyMap;
+import org.jline.reader.*;
 import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
@@ -41,9 +45,10 @@ public class Main {
             Terminal terminal = TerminalBuilder.terminal();
             Collection<String> dynamicStrings = getCurrentCommands();
             Completer dynamicCompleter = new StringsCompleter(dynamicStrings);
+
             LineReader reader = configureLineReader(terminal, dynamicCompleter);
             final PrintStream console = System.out;
-            for (;;) {
+            for (; ; ) {
 
                 boolean shouldContinue = shouldContinueRunningCommand(reader);
                 if (!System.out.equals(console))
@@ -63,17 +68,45 @@ public class Main {
     }
 
     private static LineReader configureLineReader(Terminal terminal, Completer dynamicCompleter) {
-        return LineReaderBuilder.builder()
+        AtomicInteger tabCount = new AtomicInteger(0);
+        LineReader lineReader = LineReaderBuilder.builder()
                 .terminal(terminal)
                 .parser(new DisableEscapingChars())
                 .completer(dynamicCompleter)
+                .variable(BELL_STYLE, "audible")
+                .variable(TAB_WIDTH, 2)
                 .option(LineReader.Option.AUTO_LIST, true) // Automatically list options+
                 .option(LineReader.Option.LIST_PACKED, true) // Display completions in a compact form
                 .option(LineReader.Option.AUTO_MENU, true) // Show menu automatically
                 .option(LineReader.Option.MENU_COMPLETE, true) // Cycle through completions
-                .option(LineReader.Option.AUTO_REMOVE_SLASH, false) // Cycle through completions
-                .option(LineReader.Option.AUTO_PARAM_SLASH, false) // Cycle through completions
                 .build();
+
+
+        Widget customTabWidget = () -> {
+
+            boolean istab = lineReader.getLastBinding().equals("\t");
+            List<Candidate> candidates = new ArrayList<>();
+            String wordUserHastyped = lineReader.getBuffer().toString();
+            dynamicCompleter.complete(lineReader, lineReader.getParsedLine(), candidates);
+            List<Candidate> candidateList = candidates
+                    .stream()
+                    .filter(candidate -> candidate.value().toLowerCase().startsWith(wordUserHastyped.toLowerCase()))
+                    .toList();
+            if (istab && candidateList.size() > 1 && tabCount.get() == 0) {
+               // lineReader.getTerminal().writer().write("\\x07");
+                lineReader.callWidget(BEEP);
+                tabCount.incrementAndGet();
+            } else {
+                lineReader.callWidget(LineReader.EXPAND_OR_COMPLETE);
+                tabCount.set(0);
+            }
+            return true;
+        };
+        lineReader.getWidgets().put("customtab-widget", customTabWidget);
+        KeyMap<Binding> keyMap = lineReader.getKeyMaps().get(LineReader.MAIN);
+        keyMap.bind(customTabWidget, "\t");
+
+        return lineReader;
     }
 
     private static Collection<String> getCurrentCommands() {
@@ -101,10 +134,15 @@ public class Main {
 
         }
         List<String> defaultCommands = new ArrayList<>();
+        defaultCommands.add("xyz_cow");
+        defaultCommands.add("xyz_dog");
+        defaultCommands.add("xyz_fox");
         for (ValidCommand values : ValidCommand.values()) {
             defaultCommands.add(values.getCommand());
         }
+
         defaultCommands.addAll(commandsFromPath);
+        Collections.sort(defaultCommands);
         return defaultCommands;
     }
 
@@ -249,8 +287,8 @@ public class Main {
     }
 
     private static void processBackSlashInsideDoubleQuotes(StringBuilder copyOptions, StringBuilder escapedOptions,
-            Matcher matcher,
-            int start) {
+                                                           Matcher matcher,
+                                                           int start) {
         int i = matcher.start() + 1;
         int end = matcher.end() - 1;
         StringBuilder temporary = new StringBuilder();
@@ -270,7 +308,7 @@ public class Main {
     }
 
     private static void processBackSlashInsideSingleQuotes(StringBuilder copyOptions, StringBuilder escapedOptions,
-            Matcher matcher, int start) {
+                                                           Matcher matcher, int start) {
         escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1);
         copyOptions.delete(start, matcher.end());
     }
