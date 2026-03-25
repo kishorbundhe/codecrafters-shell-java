@@ -64,7 +64,7 @@ public class Main {
                 .variable(TAB_WIDTH, 2)
                 .option(LineReader.Option.AUTO_LIST, true) // Automatically list options+
                 .option(LineReader.Option.LIST_PACKED, true) // Display completions in a compact form
-                .option(LineReader.Option.AUTO_MENU, true) // Show menu automatically
+                .option(LineReader.Option.AUTO_MENU, false) // Show menu automatically
                 .option(LineReader.Option.MENU_COMPLETE, true) // Cycle through completions
                 .build();
 
@@ -86,7 +86,6 @@ public class Main {
                 tabCount.incrementAndGet();
 
             } else {
-              
                 lineReader.callWidget(LineReader.EXPAND_OR_COMPLETE);
                 tabCount.set(0);
             }
