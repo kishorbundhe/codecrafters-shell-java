@@ -93,7 +93,7 @@ public class Main {
                     // wdwdbj");
                     lineReader.getTerminal().writer().println();
                     lineReader.getBuffer().clear();
-                    lineReader.getBuffer().write(matchedCandidates.getFirst());
+                    lineReader.getBuffer().write(matchedCandidates.getFirst()+ "tell me what to type");
                     lineReader.getTerminal().flush();
 
                     return true;
