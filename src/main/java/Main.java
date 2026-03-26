@@ -91,6 +91,7 @@ public class Main {
                     lineReader.callWidget(LineReader.REDRAW_LINE);
                     lineReader.callWidget(LineReader.REDISPLAY);
                     lineReader.getTerminal().writer().print(matchedCandidates.getFirst());
+                    lineReader.getBuffer().clear();
                     lineReader.getTerminal().flush();
                     
                     return true;
