@@ -88,13 +88,10 @@ public class Main {
                 lineReader.callWidget(EXPAND_OR_COMPLETE);
             } else if (istab && tabCount.get() == 0) {
                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
+                    lineReader.getBuffer().clear();
                     terminal.writer()
-                            .print(matchedCandidates.getFirst()+ "  ");
-                    // lineReader.getTerminal().writer().print(matchedCandidates.getFirst()+ "
-                    // wdwdbj");
-                    lineReader.getTerminal().writer().println();
-                   //lineReader.getBuffer().clear();
-                    //lineReader.getBuffer().write(matchedCandidates.getFirst() + "tell me what to type");
+                            .print(matchedCandidates.getFirst()+ "1213 +++");
+                            
                     lineReader.getTerminal().flush();
 
                     return true;
