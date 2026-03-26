@@ -89,11 +89,12 @@ public class Main {
 
             } else if (matchedCandidates.size() == 1) {
                 lineReader.callWidget(EXPAND_OR_COMPLETE);
+                System.out.println(" I am here matchedCandidates.size() == 1");
             } else if (istab && tabCount.get() == 0) {
                 lineReader.callWidget(BEEP);
                 tabCount.incrementAndGet();
             } else if (tabCount.get() >= 1 && istab) {
-                System.out.println("I am here + tab is more than 1");
+                System.out.println("I am here + tab is more than tabCount.get() >= 1 && istab");
                 lineReader.getTerminal().writer().println();
                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
                     terminal.writer().print(matchedCandidates.getFirst());
