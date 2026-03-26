@@ -87,7 +87,7 @@ public class Main {
             } else if (matchedCandidates.size() == 1) {
                 lineReader.callWidget(EXPAND_OR_COMPLETE);
             } else if (istab && tabCount.get() == 0) {
-                lineReader.getTerminal().writer().println();
+            
                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
                     lineReader.getBuffer().clear();
                     terminal.writer().print(matchedCandidates.getFirst() + "  ");
