@@ -87,11 +87,11 @@ public class Main {
             } else if (matchedCandidates.size() == 1) {
                 lineReader.callWidget(EXPAND_OR_COMPLETE);
             } else if (istab && tabCount.get() == 0) {
-            
+                    lineReader.getTerminal().writer().println(" #####");
                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
                     lineReader.getBuffer().clear();
-                    lineReader.getTerminal().writer().print(matchedCandidates.getFirst() + "  ");
-                    lineReader.getTerminal().writer().println();
+                    lineReader.getTerminal().writer().print(matchedCandidates.getFirst() + "######1212");
+                    lineReader.getTerminal().writer().println("1232");
                     lineReader.getTerminal().flush();
                     lineReader.getBuffer().write(matchedCandidates.getFirst());
                     lineReader.callWidget(LineReader.REDRAW_LINE);
