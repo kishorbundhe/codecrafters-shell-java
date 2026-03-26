@@ -35,7 +35,7 @@ public class Main {
 
             LineReader reader = configureLineReader(terminal, dynamicCompleter);
             final PrintStream console = System.out;
-            for (; ; ) {
+            for (;;) {
 
                 boolean shouldContinue = shouldContinueRunningCommand(reader);
                 if (!System.out.equals(console))
@@ -90,11 +90,13 @@ public class Main {
                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
                     lineReader.callWidget(LineReader.REDRAW_LINE);
                     lineReader.callWidget(LineReader.REDISPLAY);
-                    lineReader.getTerminal().writer().print(matchedCandidates.getFirst()+ " wdwdbj");
+                    // lineReader.getTerminal().writer().print(matchedCandidates.getFirst()+ "
+                    // wdwdbj");
+                    lineReader.getTerminal().writer().println();
                     lineReader.getBuffer().clear();
                     lineReader.getBuffer().write(matchedCandidates.getFirst());
                     lineReader.getTerminal().flush();
-                    
+
                     return true;
                 }
                 lineReader.callWidget(BEEP);
@@ -296,8 +298,8 @@ public class Main {
     }
 
     private static void processBackSlashInsideDoubleQuotes(StringBuilder copyOptions, StringBuilder escapedOptions,
-                                                           Matcher matcher,
-                                                           int start) {
+            Matcher matcher,
+            int start) {
         int i = matcher.start() + 1;
         int end = matcher.end() - 1;
         StringBuilder temporary = new StringBuilder();
@@ -317,7 +319,7 @@ public class Main {
     }
 
     private static void processBackSlashInsideSingleQuotes(StringBuilder copyOptions, StringBuilder escapedOptions,
-                                                           Matcher matcher, int start) {
+            Matcher matcher, int start) {
         escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1);
         copyOptions.delete(start, matcher.end());
     }
