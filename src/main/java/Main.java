@@ -81,6 +81,7 @@ public class Main {
             List<String> matchedCandidates = uniqueCandidates.stream().sorted()
                     .filter(candidate -> candidate.toLowerCase().startsWith(wordUserHastyped.toLowerCase()))
                     .toList();
+               System.out.println("matchedCandidates" + matchedCandidates);     
             if (matchedCandidates.isEmpty()) {
                 lineReader.callWidget(BEEP);
 
