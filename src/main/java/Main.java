@@ -96,8 +96,9 @@ public class Main {
 
                 lineReader.getTerminal().writer().println();
                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
-                    System.out.println("aaDWDQX+   " + matchedCandidates.getFirst());
                     terminal.writer().print(matchedCandidates.getFirst());
+                    lineReader.getBuffer().clear();
+                    lineReader.getBuffer().write(matchedCandidates.getFirst());
                 } else {
                     for (String complete : matchedCandidates) {
                         terminal.writer()
