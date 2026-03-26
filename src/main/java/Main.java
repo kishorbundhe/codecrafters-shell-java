@@ -91,9 +91,8 @@ public class Main {
                     lineReader.getBuffer().clear();
                     lineReader.getTerminal().flush();
                     
-                    lineReader.getTerminal().writer()
-                            .print("##### "+ matchedCandidates.getFirst()+ "1213 +++");
-                            
+                    lineReader.getTerminal().writer().write("##### "+ matchedCandidates.getFirst()+ "1213 +++");
+                    lineReader.callWidget(LineReader.REDRAW_LINE);
                     lineReader.getTerminal().flush();
 
                     return true;
