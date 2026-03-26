@@ -90,8 +90,9 @@ public class Main {
                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
                     lineReader.callWidget(LineReader.REDRAW_LINE);
                     lineReader.callWidget(LineReader.REDISPLAY);
-                    lineReader.getTerminal().writer().print(matchedCandidates.getFirst());
+                    lineReader.getTerminal().writer().print(matchedCandidates.getFirst()+ " wdwdbj");
                     lineReader.getBuffer().clear();
+                    lineReader.getBuffer().write(matchedCandidates.getFirst());
                     lineReader.getTerminal().flush();
                     
                     return true;
