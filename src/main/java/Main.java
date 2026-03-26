@@ -90,7 +90,7 @@ public class Main {
             
                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
                     lineReader.getBuffer().clear();
-                    terminal.writer().print(matchedCandidates.getFirst() + "  ");
+                    lineReader.getTerminal().writer().print(matchedCandidates.getFirst() + "  ");
                     lineReader.getTerminal().writer().println();
                     lineReader.getTerminal().flush();
                     lineReader.getBuffer().write(matchedCandidates.getFirst());
