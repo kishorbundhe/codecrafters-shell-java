@@ -80,20 +80,14 @@ public class Main {
                     .map(Candidate::value).collect(Collectors.toSet());
             List<String> matchedCandidates = uniqueCandidates.stream().sorted()
                     .filter(candidate -> candidate.toLowerCase().startsWith(wordUserHastyped.toLowerCase()))
-                    .toList();
-               System.out.println("matchedCandidates" + matchedCandidates);     
+                    .toList();    
             if (matchedCandidates.isEmpty()) {
                 lineReader.callWidget(BEEP);
 
             } else if (matchedCandidates.size() == 1) {
                 lineReader.callWidget(EXPAND_OR_COMPLETE);
             } else if (istab && tabCount.get() == 0) {
-                lineReader.callWidget(BEEP);
-                tabCount.incrementAndGet();
-            } else if (tabCount.get() == 1 && istab) {
-                lineReader.getTerminal().writer().println();
-
-                if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
+                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
                     terminal.writer().print(matchedCandidates.getFirst()+ "  ");
 
                     lineReader.getBuffer().clear();
@@ -103,7 +97,11 @@ public class Main {
                     lineReader.callWidget(LineReader.REDRAW_LINE);
                     lineReader.callWidget(LineReader.REDISPLAY);
                     return true;
-                }
+                } 
+                lineReader.callWidget(BEEP);
+                tabCount.incrementAndGet();
+            } else if (tabCount.get() == 1 && istab) {
+                lineReader.getTerminal().writer().println();
                 for (String complete : matchedCandidates) {
                     terminal.writer()
                             .print(complete + "  ");
