@@ -88,12 +88,9 @@ public class Main {
                 lineReader.callWidget(EXPAND_OR_COMPLETE);
             } else if (istab && tabCount.get() == 0) {
                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
-                    lineReader.getBuffer().clear();
+                    lineReader.getTerminal().flush();
                     lineReader.getTerminal().writer().print(matchedCandidates.getFirst());
                     lineReader.getTerminal().flush();
-                    lineReader.getTerminal().writer().println("1232");
-                    lineReader.getTerminal().flush();
-                    lineReader.getBuffer().write(matchedCandidates.getFirst());
                     lineReader.callWidget(LineReader.REDRAW_LINE);
                     lineReader.callWidget(LineReader.REDISPLAY);
                     return true;
