@@ -2,6 +2,7 @@ import commands.*;
 import lineReader.DisableEscapingChars;
 import org.jline.keymap.KeyMap;
 import org.jline.reader.*;
+import org.jline.reader.impl.LineReaderImpl;
 import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
@@ -10,10 +11,15 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import static commands.Command.commandIsPresentAndExecutable;
@@ -62,16 +68,7 @@ public class Main {
                 .option(LineReader.Option.MENU_COMPLETE, true) // Cycle through completions
                 .build();
 
-        Widget customTabWidget = getTabWidget(terminal, dynamicCompleter, lineReader, tabCount);
-        lineReader.getWidgets().put("customtab-widget", customTabWidget);
-        KeyMap<Binding> keyMap = lineReader.getKeyMaps().get(LineReader.MAIN);
-        keyMap.bind(customTabWidget, "\t");
-
-        return lineReader;
-    }
-
-    private static Widget getTabWidget(Terminal terminal, Completer dynamicCompleter, LineReader lineReader, AtomicInteger tabCount) {
-        return () -> {
+        Widget customTabWidget = () -> {
 
             boolean istab = lineReader.getLastBinding().equals("\t");
             List<Candidate> candidates = new ArrayList<>();
@@ -89,32 +86,41 @@ public class Main {
 
             } else if (matchedCandidates.size() == 1) {
                 lineReader.callWidget(EXPAND_OR_COMPLETE);
-                System.out.println(" I am here matchedCandidates.size() == 1");
             } else if (istab && tabCount.get() == 0) {
                 lineReader.callWidget(BEEP);
                 tabCount.incrementAndGet();
-            } else if (tabCount.get() >= 1 && istab) {
-                System.out.println("I am here + tab is more than tabCount.get() >= 1 && istab");
+            } else if (tabCount.get() == 1 && istab) {
                 lineReader.getTerminal().writer().println();
+
                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
-                    terminal.writer().print(matchedCandidates.getFirst());
+                    terminal.writer().print(matchedCandidates.getFirst()+ "  ");
+
                     lineReader.getBuffer().clear();
                     lineReader.getBuffer().write(matchedCandidates.getFirst());
-                } else {
-                    for (String complete : matchedCandidates) {
-                        terminal.writer()
-                                .print(complete + "  ");
-                    }
-                    tabCount.set(0);
+                    lineReader.getTerminal().writer().println();
+                    lineReader.getTerminal().flush();
+                    lineReader.callWidget(LineReader.REDRAW_LINE);
+                    lineReader.callWidget(LineReader.REDISPLAY);
+                    return true;
                 }
+                for (String complete : matchedCandidates) {
+                    terminal.writer()
+                            .print(complete + "  ");
+                }
+
                 lineReader.getTerminal().writer().println();
                 lineReader.getTerminal().flush();
                 lineReader.callWidget(LineReader.REDRAW_LINE);
                 lineReader.callWidget(LineReader.REDISPLAY);
-                
+                tabCount.set(0);
             }
             return true;
         };
+        lineReader.getWidgets().put("customtab-widget", customTabWidget);
+        KeyMap<Binding> keyMap = lineReader.getKeyMaps().get(LineReader.MAIN);
+        keyMap.bind(customTabWidget, "\t");
+
+        return lineReader;
     }
 
     private static Collection<String> getCurrentCommands() {
@@ -145,10 +151,6 @@ public class Main {
         for (ValidCommand values : ValidCommand.values()) {
             defaultCommands.add(values.getCommand());
         }
-
-//        defaultCommands.add("xyz_fox");
-//        defaultCommands.add("xyz_fox_ant");
-//        defaultCommands.add("xyz_fox_ant_dog");
 
         defaultCommands.addAll(commandsFromPath);
         Collections.sort(defaultCommands);
