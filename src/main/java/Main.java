@@ -93,7 +93,7 @@ public class Main {
                 lineReader.callWidget(BEEP);
                 tabCount.incrementAndGet();
             } else if (tabCount.get() >= 1 && istab) {
-
+                System.out.println("I am here + tab is more than 1");
                 lineReader.getTerminal().writer().println();
                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
                     terminal.writer().print(matchedCandidates.getFirst());
@@ -104,12 +104,13 @@ public class Main {
                         terminal.writer()
                                 .print(complete + "  ");
                     }
+                    tabCount.set(0);
                 }
                 lineReader.getTerminal().writer().println();
                 lineReader.getTerminal().flush();
                 lineReader.callWidget(LineReader.REDRAW_LINE);
                 lineReader.callWidget(LineReader.REDISPLAY);
-                tabCount.set(0);
+                
             }
             return true;
         };
