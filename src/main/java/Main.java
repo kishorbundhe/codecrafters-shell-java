@@ -89,9 +89,7 @@ public class Main {
             } else if (istab && tabCount.get() == 0) {
                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
                     lineReader.getBuffer().clear();
-                    lineReader.getTerminal().flush();
-                    
-                    lineReader.getTerminal().writer().write("##### "+ matchedCandidates.getFirst()+ "1213 +++");
+                    lineReader.getBuffer().write("##### "+ matchedCandidates.getFirst()+ "1213 +++");
                     lineReader.callWidget(LineReader.REDRAW_LINE);
                     lineReader.getTerminal().flush();
 
