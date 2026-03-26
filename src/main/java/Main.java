@@ -91,7 +91,7 @@ public class Main {
                     lineReader.getBuffer().clear();
                     terminal.flush();
                     terminal.writer()
-                            .print(matchedCandidates.getFirst()+ "1213 +++");
+                            .print("##### "+ matchedCandidates.getFirst()+ "1213 +++");
                             
                     lineReader.getTerminal().flush();
 
