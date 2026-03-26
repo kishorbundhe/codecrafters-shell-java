@@ -35,7 +35,7 @@ public class Main {
 
             LineReader reader = configureLineReader(terminal, dynamicCompleter);
             final PrintStream console = System.out;
-            for (;;) {
+            for (; ; ) {
 
                 boolean shouldContinue = shouldContinueRunningCommand(reader);
                 if (!System.out.equals(console))
@@ -90,7 +90,7 @@ public class Main {
                 if (matchedCandidates.getLast().contains(matchedCandidates.getFirst())) {
                     lineReader.getBuffer().clear();
                     lineReader.getBuffer().write(matchedCandidates.getFirst());
-                    lineReader.callWidget(LineReader.REDRAW_LINE);
+                    lineReader.callWidget(LineReader.REDRAW_LINE); // it redraws the line removing user input
                     lineReader.getTerminal().flush();
 
                     return true;
@@ -106,8 +106,8 @@ public class Main {
 
                 lineReader.getTerminal().writer().println();
                 lineReader.getTerminal().flush();
-                lineReader.callWidget(LineReader.REDRAW_LINE);
-                lineReader.callWidget(LineReader.REDISPLAY);
+                lineReader.callWidget(LineReader.REDRAW_LINE); // it redraws the line removing user input
+                lineReader.callWidget(LineReader.REDISPLAY); // it creates the whole display again
                 tabCount.set(0);
             }
             return true;
@@ -294,8 +294,8 @@ public class Main {
     }
 
     private static void processBackSlashInsideDoubleQuotes(StringBuilder copyOptions, StringBuilder escapedOptions,
-            Matcher matcher,
-            int start) {
+                                                           Matcher matcher,
+                                                           int start) {
         int i = matcher.start() + 1;
         int end = matcher.end() - 1;
         StringBuilder temporary = new StringBuilder();
@@ -315,7 +315,7 @@ public class Main {
     }
 
     private static void processBackSlashInsideSingleQuotes(StringBuilder copyOptions, StringBuilder escapedOptions,
-            Matcher matcher, int start) {
+                                                           Matcher matcher, int start) {
         escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1);
         copyOptions.delete(start, matcher.end());
     }
