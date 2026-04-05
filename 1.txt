@@ -1,8 +1,0 @@
-total 32
--rw-r--r--@ 1 kishorbundhe  staff     0 Mar 12 01:37 1.txt
--rw-r--r--@ 1 kishorbundhe  staff  1379 Feb 17 00:48 README.md
--rw-r--r--@ 1 kishorbundhe  staff   280 Feb 17 00:48 codecrafters.yml
--rw-r--r--@ 1 kishorbundhe  staff  2414 Mar 12 01:29 pom.xml
-drwxr-xr-x@ 3 kishorbundhe  staff    96 Feb 17 00:48 src
-drwxr-xr-x@ 6 kishorbundhe  staff   192 Mar 12 01:28 target
--rwxr-xr-x@ 1 kishorbundhe  staff   865 Feb 17 00:48 your_program.sh

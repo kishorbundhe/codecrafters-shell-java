@@ -1,7 +1,12 @@
 package commands;
 
+import InputProcessor.InputProcessor;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,147 +16,193 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CustomExecutable implements Command {
-    @Override
-    public boolean execute(UserInput userInput) {
-        String command = userInput.command();
-        String options = userInput.options();
-        String stdFileName = userInput.stdOutFile().stdOutFile();
-        boolean stdOutAppend = userInput.stdOutFile().append();
-        String stdErrFileName = userInput.stdErrFile().stdErrFile();
-        boolean stdErrAppend = userInput.stdErrFile().append();
-        List<String> args;
-        if (command.equalsIgnoreCase("cat")) {
-            args = getCatCommandAndFiles(command, options);
+  @Override
+  public boolean execute(UserInput userInput) {
+    if (userInput.userInput().contains("|")) {
+      // process piped command
+      List<ProcessBuilder> processBuilders = processPipeBasedCommand(userInput.userInput());
+      processBuilders.getLast().redirectOutput(ProcessBuilder.Redirect.INHERIT);
+      try {
+        List<Process> processes = ProcessBuilder.startPipeline(processBuilders);
+
+        for (Process process : processes) {
+          process.waitFor();
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+      return true;
+    }
+
+    // process without pipe command
+    BuildProcessArguments result = getBuildProcessArguments(userInput);
+    ProcessBuilder processBuilder = new ProcessBuilder(result.args());
+    processBuilder.inheritIO();
+    if (result.stdFileName() != null && !result.stdFileName().isEmpty()) {
+      if (result.stdOutAppend()) {
+        processBuilder.redirectOutput(
+            ProcessBuilder.Redirect.appendTo(new File(result.stdFileName())));
+      } else {
+        processBuilder.redirectOutput(new File(result.stdFileName()));
+      }
+    }
+    if (result.stdErrFileName() != null && !result.stdErrFileName().isEmpty()) {
+      if (result.stdErrAppend()) {
+        processBuilder.redirectError(
+            ProcessBuilder.Redirect.appendTo(new File(result.stdErrFileName())));
+      } else {
+        processBuilder.redirectError(new File(result.stdErrFileName()));
+      }
+    }
+    try {
+      Process process = processBuilder.start();
+      process.waitFor();
+    } catch (IOException | InterruptedException e) {
+      e.printStackTrace();
+    }
+    return true;
+  }
+
+  private BuildProcessArguments getBuildProcessArguments(UserInput userInput) {
+    String command = userInput.command();
+    String options = userInput.options();
+    String stdFileName = userInput.stdOutFile().stdOutFile();
+    boolean stdOutAppend = userInput.stdOutFile().append();
+    String stdErrFileName = userInput.stdErrFile().stdErrFile();
+    boolean stdErrAppend = userInput.stdErrFile().append();
+    List<String> args;
+    if (command.equalsIgnoreCase("cat")) {
+      args = getCatCommandAndFiles(command, options);
+    } else {
+      args = getCommandArgs(command, options);
+    }
+    return new BuildProcessArguments(stdFileName, stdOutAppend, stdErrFileName, stdErrAppend, args);
+  }
+
+  private record BuildProcessArguments(
+      String stdFileName,
+      boolean stdOutAppend,
+      String stdErrFileName,
+      boolean stdErrAppend,
+      List<String> args) {}
+
+  private List<ProcessBuilder> processPipeBasedCommand(String unChangedInputFromUser) {
+    InputProcessor inputProcessor = new InputProcessor();
+    String[] split = unChangedInputFromUser.split("\\|");
+    List<String> commands = Arrays.stream(split).map(String::trim).toList();
+    List<UserInput> parsedInputs = commands.stream().map(inputProcessor::parseUserInput).toList();
+    List<ProcessBuilder> processBuilders =
+        parsedInputs.stream()
+            .map(this::getBuildProcessArguments)
+            .map(bpa -> new ProcessBuilder(bpa.args))
+            .toList();
+    return processBuilders;
+  }
+
+  private List<String> getCommandArgs(String command, String options) {
+    if (options.isBlank()) {
+      return List.of(command);
+    }
+    return Stream.concat(Stream.of(command), Arrays.stream(options.split(" ")))
+        .collect(Collectors.toList());
+  }
+
+  private List<String> getCatCommandAndFiles(String command, String options) {
+    List<String> args;
+    ArrayList<String> files = escapeQuotes(options);
+    args = Stream.concat(Stream.of(command), files.stream()).collect(Collectors.toList());
+    return args;
+  }
+
+  private ArrayList<String> escapeQuotes(String options) {
+    ArrayList<String> files = new ArrayList<>();
+    String regex = "(?<!\\\\)\"((?:\\\\.|[^\"\\\\])*)\"(?!\\\\)|(?<!\\\\)'([^']*?)'(?!\\\\)";
+    Pattern pattern = Pattern.compile(regex);
+
+    options = options.replace("\"\"", "");
+    options = options.replace("''", "");
+    StringBuilder copyOptions = new StringBuilder(options);
+
+    while (true) {
+      Matcher matcher = pattern.matcher(copyOptions.toString());
+      int start = 0;
+      if (matcher.find()) {
+        StringBuilder escapedOptions = new StringBuilder();
+        if (matcher.start() != 0) {
+          beforeMatch(copyOptions, matcher, escapedOptions);
+        }
+        if (copyOptions.charAt(matcher.start()) == '\"') {
+          // Double quotes
+          processBackSlashInsideDoubleQuotes(files, copyOptions, matcher, start, escapedOptions);
+
         } else {
-            args = getCommandArgs(command, options);
+          // single quotes
+          processBackSlashInsideSingleQuotes(files, copyOptions, matcher, start, escapedOptions);
         }
 
-        ProcessBuilder processBuilder = new ProcessBuilder(args);
-
-        processBuilder.inheritIO();
-        if (stdFileName != null && !stdFileName.isEmpty()) {
-            if (stdOutAppend) {
-                processBuilder.redirectOutput(ProcessBuilder.Redirect.appendTo(new File(stdFileName)));
-            } else {
-                processBuilder.redirectOutput(new File(stdFileName));
-            }
-
-        }
-        if (stdErrFileName != null && !stdErrFileName.isEmpty()) {
-            if (stdErrAppend) {
-                processBuilder.redirectError(ProcessBuilder.Redirect.appendTo(new File(stdErrFileName)));
-            } else {
-                processBuilder.redirectError(new File(stdErrFileName));
-            }
-        }
-        try {
-            Process process = processBuilder.start();
-            process.waitFor();
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-        return true;
-    }
-
-    private List<String> getCommandArgs(String command, String options) {
-        return Stream.concat(
-                Stream.of(command),
-                Arrays.stream(options.split(" ")))
-                .collect(Collectors.toList());
-    }
-
-    private List<String> getCatCommandAndFiles(String command, String options) {
-        List<String> args;
-        ArrayList<String> files = escapeQuotes(options);
-        args = Stream.concat(
-                Stream.of(command),
-                files.stream())
-                .collect(Collectors.toList());
-        return args;
-    }
-
-    private ArrayList<String> escapeQuotes(String options) {
-        ArrayList<String> files = new ArrayList<>();
-        String regex = "(?<!\\\\)\"((?:\\\\.|[^\"\\\\])*)\"(?!\\\\)|(?<!\\\\)'([^']*?)'(?!\\\\)";
-        Pattern pattern = Pattern.compile(regex);
-        options.replaceAll("\"\"", "");
-        options.replaceAll("\'\'", "");
-        StringBuilder copyOptions = new StringBuilder(options);
-
-        while (true) {
-            Matcher matcher = pattern.matcher(copyOptions.toString());
-            int start = 0;
-            if (matcher.find()) {
-                StringBuilder escapedOptions = new StringBuilder();
-                if (matcher.start() != 0) {
-                    beforeMatch(copyOptions, matcher, escapedOptions);
-                }
-                if (copyOptions.charAt(matcher.start()) == '\"') {
-                    // Double quotes
-                    processBackSlashInsideDoubleQuotes(files, copyOptions, matcher, start, escapedOptions);
-
-                } else {
-                    // single quotes
-                    processBackSlashInsideSingleQuotes(files, copyOptions, matcher, start, escapedOptions);
-                }
-
-            } else {
-                StringBuilder temporary = new StringBuilder();
-                if (copyOptions.isEmpty())
-                    break;
-                for (int i = start; i < copyOptions.length(); i++) {
-                    char ch = copyOptions.charAt(i);
-                    if (ch == '\\') {
-                        i++;
-                        temporary.append(copyOptions.charAt(i));
-                        continue;
-                    }
-                    temporary.append(ch);
-                }
-                String nameOfFiles[] = temporary.toString().split(" ");
-                Arrays.stream(nameOfFiles).forEach(file -> files.add(file));
-                break;
-            }
-            start = matcher.start();
-
-        }
-
-        return files;
-    }
-
-    private void processBackSlashInsideDoubleQuotes(ArrayList<String> files, StringBuilder copyOptions, Matcher matcher,
-            int start,
-            StringBuilder escapedOptions) {
-        int i = matcher.start() + 1;
-        int end = matcher.end() - 1;
+      } else {
         StringBuilder temporary = new StringBuilder();
-        for (; i < end; i++) {
-            char ch = copyOptions.charAt(i);
-            if (ch == '\\' && ((i + 1 <= end)
-                    && (copyOptions.charAt(i + 1) == '\"' || copyOptions.charAt(i + 1) == '\\'))) {
-                // this is escaping logic
-                i++;
-                temporary.append(copyOptions.charAt(i));
-                continue;
-            }
-            temporary.append(ch);
+        if (copyOptions.isEmpty()) break;
+        for (int i = start; i < copyOptions.length(); i++) {
+          char ch = copyOptions.charAt(i);
+          if (ch == '\\') {
+            i++;
+            temporary.append(copyOptions.charAt(i));
+            continue;
+          }
+          temporary.append(ch);
         }
-        escapedOptions.append(temporary.toString());
-        files.add(escapedOptions.toString());
-        copyOptions.delete(start, matcher.end());
+        String nameOfFiles[] = temporary.toString().split(" ");
+        Arrays.stream(nameOfFiles).forEach(file -> files.add(file));
+        break;
+      }
+      start = matcher.start();
     }
 
-    private void processBackSlashInsideSingleQuotes(ArrayList<String> files, StringBuilder copyOptions, Matcher matcher,
-            int start,
-            StringBuilder escapedOptions) {
-        files.add(escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1).toString());
-        copyOptions.delete(start, matcher.end());
-    }
+    return files;
+  }
 
-    private void beforeMatch(StringBuilder copyOptions, Matcher matcher, StringBuilder escapedOptions) {
-        String s = copyOptions.toString().substring(0, matcher.start());
-        String substr = s.replaceAll("\\s+", "");
-        if (!substr.isBlank())
-            escapedOptions.append(substr);
+  private void processBackSlashInsideDoubleQuotes(
+      ArrayList<String> files,
+      StringBuilder copyOptions,
+      Matcher matcher,
+      int start,
+      StringBuilder escapedOptions) {
+    int i = matcher.start() + 1;
+    int end = matcher.end() - 1;
+    StringBuilder temporary = new StringBuilder();
+    for (; i < end; i++) {
+      char ch = copyOptions.charAt(i);
+      if (ch == '\\'
+          && ((i + 1 <= end)
+              && (copyOptions.charAt(i + 1) == '\"' || copyOptions.charAt(i + 1) == '\\'))) {
+        // this is escaping logic
+        i++;
+        temporary.append(copyOptions.charAt(i));
+        continue;
+      }
+      temporary.append(ch);
     }
+    escapedOptions.append(temporary.toString());
+    files.add(escapedOptions.toString());
+    copyOptions.delete(start, matcher.end());
+  }
+
+  private void processBackSlashInsideSingleQuotes(
+      ArrayList<String> files,
+      StringBuilder copyOptions,
+      Matcher matcher,
+      int start,
+      StringBuilder escapedOptions) {
+    files.add(
+        escapedOptions.append(copyOptions, matcher.start() + 1, matcher.end() - 1).toString());
+    copyOptions.delete(start, matcher.end());
+  }
+
+  private void beforeMatch(
+      StringBuilder copyOptions, Matcher matcher, StringBuilder escapedOptions) {
+    String s = copyOptions.toString().substring(0, matcher.start());
+    String substr = s.replaceAll("\\s+", "");
+    if (!substr.isBlank()) escapedOptions.append(substr);
+  }
 }
