@@ -1,12 +1,7 @@
 package commands;
 
-import InputProcessor.InputProcessor;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,29 +10,33 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import InputProcessor.InputProcessor;
+
 public class CustomExecutable implements Command {
   @Override
   public boolean execute(UserInput userInput) {
     if (userInput.userInput().contains("|")) {
       // process piped command
-      List<ProcessBuilder> processBuilders = processPipeBasedCommand(userInput.userInput());
-      processBuilders.getLast().redirectOutput(ProcessBuilder.Redirect.INHERIT);
-      try {
-        List<Process> processes = ProcessBuilder.startPipeline(processBuilders);
-
-        for (Process process : processes) {
-          process.waitFor();
-        }
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+      List<ProcessBuilder> processBuilders = buildPipeBasedProcess(userInput.userInput());
+      executePipeBasedCommand(processBuilders);
       return true;
     }
 
     // process without pipe command
+    ProcessBuilder processBuilder = buildNonPipeBasedProcess(userInput);
+    executeNonPipeBasedCommand(processBuilder);
+    return true;
+  }
+
+  private ProcessBuilder buildNonPipeBasedProcess(UserInput userInput) {
     BuildProcessArguments result = getBuildProcessArguments(userInput);
     ProcessBuilder processBuilder = new ProcessBuilder(result.args());
-    processBuilder.inheritIO();
+    if (userInput.inputFile() != null) {
+      processBuilder.redirectInput(ProcessBuilder.Redirect.from(userInput.inputFile()));
+      processBuilder.redirectOutput(ProcessBuilder.Redirect.to(userInput.outputfile()));
+    } else {
+      processBuilder.inheritIO();
+    }
     if (result.stdFileName() != null && !result.stdFileName().isEmpty()) {
       if (result.stdOutAppend()) {
         processBuilder.redirectOutput(
@@ -54,13 +53,28 @@ public class CustomExecutable implements Command {
         processBuilder.redirectError(new File(result.stdErrFileName()));
       }
     }
+    return processBuilder;
+  }
+
+  private static void executeNonPipeBasedCommand(ProcessBuilder processBuilder) {
     try {
       Process process = processBuilder.start();
       process.waitFor();
     } catch (IOException | InterruptedException e) {
       e.printStackTrace();
     }
-    return true;
+  }
+
+  private static void executePipeBasedCommand(List<ProcessBuilder> processBuilders) {
+    processBuilders.getLast().redirectOutput(ProcessBuilder.Redirect.INHERIT);
+    try {
+      List<Process> processes = ProcessBuilder.startPipeline(processBuilders);
+      for (Process process : processes) {
+        process.waitFor();
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   private BuildProcessArguments getBuildProcessArguments(UserInput userInput) {
@@ -86,11 +100,12 @@ public class CustomExecutable implements Command {
       boolean stdErrAppend,
       List<String> args) {}
 
-  private List<ProcessBuilder> processPipeBasedCommand(String unChangedInputFromUser) {
+  private List<ProcessBuilder> buildPipeBasedProcess(String unChangedInputFromUser) {
     InputProcessor inputProcessor = new InputProcessor();
     String[] split = unChangedInputFromUser.split("\\|");
     List<String> commands = Arrays.stream(split).map(String::trim).toList();
-    List<UserInput> parsedInputs = commands.stream().map(inputProcessor::parseUserInput).toList();
+    List<UserInput> parsedInputs =
+        commands.stream().map(c -> inputProcessor.parseUserInput(c, null, null)).toList();
     List<ProcessBuilder> processBuilders =
         parsedInputs.stream()
             .map(this::getBuildProcessArguments)
@@ -101,7 +116,9 @@ public class CustomExecutable implements Command {
 
   private List<String> getCommandArgs(String command, String options) {
     if (options.isBlank()) {
-      return List.of(command);
+      List<String> optionsList = new ArrayList<>();
+      optionsList.add(command);
+      return optionsList;
     }
     return Stream.concat(Stream.of(command), Arrays.stream(options.split(" ")))
         .collect(Collectors.toList());

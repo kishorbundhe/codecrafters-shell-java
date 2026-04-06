@@ -3,15 +3,13 @@ package InputProcessor;
 import commands.StdErrFile;
 import commands.StdOutFile;
 import commands.UserInput;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class InputProcessor {
 
-  public UserInput parseUserInput(String inputFromUser) {
+  public UserInput parseUserInput(String inputFromUser, File previousFile, File currentOutput) {
     RedirectionResult redirection = extractRedirectionInfo(inputFromUser);
     setupRedirectionStreams(redirection.stdOut(), redirection.stdErr());
     CommandParts commandParts = parseCommandAndOptions(redirection.cleanedInput());
@@ -21,7 +19,8 @@ public class InputProcessor {
         commandParts.command(),
         commandParts.options(),
         redirection.stdOut(),
-        redirection.stdErr());
+        redirection.stdErr(),
+        previousFile,currentOutput);
   }
 
   private static RedirectionResult extractRedirectionInfo(String input) {
@@ -55,7 +54,7 @@ public class InputProcessor {
         new StdErrFile(stdErrFile, stdErrAppend));
   }
 
-  private static void setupRedirectionStreams(StdOutFile stdOut, StdErrFile stdErr) {
+  private void setupRedirectionStreams(StdOutFile stdOut, StdErrFile stdErr) {
 
     if (!stdOut.stdOutFile().isEmpty()) {
       try {
@@ -75,7 +74,7 @@ public class InputProcessor {
     }
   }
 
-  private static CommandParts parseCommandAndOptions(String input) {
+  private CommandParts parseCommandAndOptions(String input) {
     String command = "";
     String options = "";
 
@@ -99,7 +98,6 @@ public class InputProcessor {
     } else {
       command = input.split(" ")[0];
       options = input.replaceFirst(Pattern.quote(command), "").trim();
-
     }
     return new CommandParts(command, options);
   }

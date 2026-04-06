@@ -1,19 +1,17 @@
 import static commands.Command.commandIsPresentAndExecutable;
 import static commands.Command.commandNotFound;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
@@ -35,15 +33,17 @@ import lineReader.CustomTabProcessor;
 
 public class Main {
   public static void main(String[] args) throws Exception {
+
     try {
       Terminal terminal = TerminalBuilder.terminal();
       Collection<String> dynamicStrings = getCurrentCommands();
       Completer dynamicCompleter = new StringsCompleter(dynamicStrings);
       LineReader reader = CustomTabProcessor.configureLineReader(terminal, dynamicCompleter);
+
       final PrintStream console = System.out;
       for (; ; ) {
 
-        boolean shouldContinue = shouldContinueRunningCommand(reader);
+        boolean shouldContinue = shouldContinueRunningCommand(reader, console);
         if (!System.out.equals(console)) System.setOut(console);
         if (!System.err.equals(console)) {
           System.setErr(console);
@@ -59,8 +59,6 @@ public class Main {
     }
   }
 
-
-
   private static Collection<String> getCurrentCommands() {
     String path = System.getenv("PATH");
     String[] directories = path.split(File.pathSeparator);
@@ -74,9 +72,9 @@ public class Main {
         try {
           List<String> temp =
               Files.list(dirPath)
-                  .filter(file -> Files.isExecutable(file))
+                  .filter(Files::isExecutable)
                   .map(file -> file.getFileName().toString())
-                  .collect(Collectors.toList());
+                  .toList();
           commandsFromPath.addAll(temp);
 
         } catch (IOException e) {
@@ -95,14 +93,66 @@ public class Main {
     return defaultCommands;
   }
 
-  private static boolean shouldContinueRunningCommand(LineReader reader) {
+  private static boolean shouldContinueRunningCommand(LineReader reader, PrintStream console) {
+
     String inputFromUser = reader.readLine("$ ").trim();
     if (inputFromUser.isBlank()) {
       return true;
     }
+    boolean hasShellBuiltIns = false;
+    if (inputFromUser.contains("|")) {
+      for (ValidCommand command : ValidCommand.values()) {
+        if (inputFromUser.contains(command.getCommand())) {
+          hasShellBuiltIns = true;
+        }
+      }
+    }
     InputProcessor inputProcessor = new InputProcessor();
-    UserInput commandAndOption = inputProcessor.parseUserInput(inputFromUser);
-    return processUserCommand(commandAndOption);
+    if (hasShellBuiltIns) {
+      List<String> pipedCommands =
+          Arrays.stream(inputFromUser.split("\\|")).map(String::trim).toList();
+      File previousOutput;
+      File currentOutput;
+      try {
+        Path previousTempFilePath = Paths.get("previousOutput.txt");
+        Path nextTempFilePath = Paths.get("nextOutput.txt");
+        if (Files.exists(previousTempFilePath)) {
+          Files.delete(previousTempFilePath);
+          Files.delete(nextTempFilePath);
+        }
+        previousOutput = Files.createFile(previousTempFilePath).toFile();
+        currentOutput = Files.createFile(nextTempFilePath).toFile();
+        FileOutputStream fos = new FileOutputStream(previousOutput, true);
+        System.setOut(new PrintStream(fos));
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+
+      for (int index = 0; index < pipedCommands.size(); index++) {
+        UserInput userInput =
+            inputProcessor.parseUserInput(pipedCommands.get(index), previousOutput, currentOutput);
+        processUserCommand(userInput);
+        System.out.flush();
+        if (index == pipedCommands.size() - 1) {
+          System.setOut(console);
+          try {
+            List<String> readAllLines = Files.readAllLines(currentOutput.toPath());
+            if (readAllLines.isEmpty()) {
+              Files.readAllLines(previousOutput.toPath()).forEach(System.out::println);
+            } else {
+              readAllLines.forEach(System.out::println);
+            }
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        }
+      }
+
+      return true;
+    } else {
+      UserInput commandAndOption = inputProcessor.parseUserInput(inputFromUser, null, null);
+      return processUserCommand(commandAndOption);
+    }
   }
 
   private static boolean processUserCommand(UserInput userInput) {
@@ -124,7 +174,9 @@ public class Main {
               userInput.command(),
               escapeOptions,
               userInput.stdOutFile(),
-              userInput.stdErrFile());
+              userInput.stdErrFile(),
+              userInput.inputFile(),
+              userInput.outputfile());
       shouldContinueRunning = new EchoComand().execute(userInput);
     } else {
       String escapeCommand = escapeQuotes(userInput.command());
@@ -139,7 +191,9 @@ public class Main {
                 path.getFileName().toString(),
                 userInput.options(),
                 userInput.stdOutFile(),
-                userInput.stdErrFile());
+                userInput.stdErrFile(),
+                userInput.inputFile(),
+                userInput.outputfile());
         // executable which are at sys path
         shouldContinueRunning = new CustomExecutable().execute(userInput);
       } else commandNotFound(userInput.userInput());
@@ -202,7 +256,7 @@ public class Main {
       }
       temporary.append(ch);
     }
-    escapedOptions.append(temporary.toString());
+    escapedOptions.append(temporary);
     copyOptions.delete(start, matcher.end());
   }
 

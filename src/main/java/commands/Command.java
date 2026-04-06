@@ -1,5 +1,6 @@
 package commands;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,4 +44,12 @@ public interface Command {
     static void commandNotFound(String command) {
         System.out.println(command + ": not found");
     }
+
+     static void clearFiles(String filePath) {
+         try {
+             BufferedWriter writer = Files.newBufferedWriter(Paths.get(filePath));
+             writer.write("");
+             writer.flush();
+         } catch (IOException e) {}
+     }
 }
