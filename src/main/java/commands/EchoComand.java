@@ -6,9 +6,21 @@ public class EchoComand implements Command {
     if (userInput.outputfile() != null) {
       Command.clearFiles(userInput.outputfile().getPath());
     }
+    userInput = prepareEchoInput(userInput);
     String options = userInput.options();
-    // options = options.replaceAll("^\"|\"$", ""); // remove surrounding quotes if present
     System.out.println(options);
     return true;
+  }
+
+  private static UserInput prepareEchoInput(UserInput userInput) {
+    String escapeOptions = ShellUtils.resolveQuotes(userInput.options());
+    return new UserInput(
+        "",
+        userInput.command(),
+        escapeOptions,
+        userInput.stdOutFile(),
+        userInput.stdErrFile(),
+        userInput.inputFile(),
+        userInput.outputfile());
   }
 }

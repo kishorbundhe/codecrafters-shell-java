@@ -20,7 +20,8 @@ public class InputProcessor {
         commandParts.options(),
         redirection.stdOut(),
         redirection.stdErr(),
-        previousFile,currentOutput);
+        previousFile,
+        currentOutput);
   }
 
   private static RedirectionResult extractRedirectionInfo(String input) {

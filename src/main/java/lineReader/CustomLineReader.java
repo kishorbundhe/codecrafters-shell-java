@@ -5,12 +5,16 @@ import static org.jline.reader.LineReader.BELL_STYLE;
 import static org.jline.reader.LineReader.EXPAND_OR_COMPLETE;
 import static org.jline.reader.LineReader.TAB_WIDTH;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import commands.ValidCommand;
 import org.jline.keymap.KeyMap;
 import org.jline.reader.Binding;
 import org.jline.reader.Candidate;
@@ -18,11 +22,14 @@ import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.Widget;
+import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
 
-public class CustomTabProcessor {
+public class CustomLineReader {
 
-    public static LineReader configureLineReader(Terminal terminal, Completer dynamicCompleter) {
+    public static LineReader configureLineReader(Terminal terminal) {
+        Collection<String> dynamicStrings = getCurrentCommands();
+        Completer dynamicCompleter = new StringsCompleter(dynamicStrings);
         AtomicInteger tabCount = new AtomicInteger(0);
         LineReader lineReader = LineReaderBuilder.builder()
                 .terminal(terminal)
@@ -85,5 +92,39 @@ public class CustomTabProcessor {
         keyMap.bind(customTabWidget, "\t");
 
         return lineReader;
+    }
+
+    private static Collection<String> getCurrentCommands() {
+        String path = System.getenv("PATH");
+        String[] directories = path.split(File.pathSeparator);
+        List<String> commandsFromPath = new ArrayList<>();
+
+        for (String dir : directories) {
+            // list all files in the directory and check if the command exists
+            Path dirPath = Paths.get(dir);
+            boolean isDirectory = Files.isDirectory(dirPath);
+            if (isDirectory) {
+                try {
+                    List<String> temp =
+                            Files.list(dirPath)
+                                    .filter(Files::isExecutable)
+                                    .map(file -> file.getFileName().toString())
+                                    .toList();
+                    commandsFromPath.addAll(temp);
+
+                } catch (IOException e) {
+
+                    e.printStackTrace();
+                }
+            }
+        }
+        List<String> defaultCommands = new ArrayList<>();
+        for (ValidCommand values : ValidCommand.values()) {
+            defaultCommands.add(values.getCommand());
+        }
+
+        defaultCommands.addAll(commandsFromPath);
+        Collections.sort(defaultCommands);
+        return defaultCommands;
     }
 }

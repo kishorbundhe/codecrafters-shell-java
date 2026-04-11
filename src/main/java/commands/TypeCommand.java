@@ -8,7 +8,7 @@ public class TypeCommand implements Command {
         if (userInput.outputfile() != null) {
             Command.clearFiles(userInput.outputfile().getPath());
         }
-        String options = userInput.options();
+        String options = ShellUtils.resolveQuotes(userInput.options());
         // since command = type, we need to check if options is a valid command
         if (!ValidCommand.isValidCommand(options)) {
 
