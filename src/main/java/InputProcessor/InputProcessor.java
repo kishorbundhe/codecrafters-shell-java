@@ -152,7 +152,7 @@ public class InputProcessor {
           return new  CommandParts(command, options);
       }
       command = tokens.get(0);
-      options = tokens.size()>1 ? "" : String.join(" ",tokens.subList(1,tokens.size()));
+      options = tokens.size()>1 ? String.join(" ",tokens.subList(1,tokens.size())):"";
     return new CommandParts(command, options);
   }
 }
