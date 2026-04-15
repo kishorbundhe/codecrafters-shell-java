@@ -19,7 +19,6 @@ public interface Command {
         // directories in PATH
         String path = System.getenv("PATH");
         String[] directories = path.split(File.pathSeparator);
-
         for (String dir : directories) {
             // list all files in the directory and check if the command exists
             Path dirPath = Paths.get(dir);

@@ -1,6 +1,7 @@
 package commands;
 
 import pipe.PipelineStage;
+import pipe.PipelineUtils;
 
 import java.io.IOException;
 
@@ -13,11 +14,7 @@ public class PwdCommand implements Command {
 
     @Override
     public boolean execute(PipelineStage pipelineStage) {
-        try {
-            pipelineStage.getStdout().write(System.getProperty("user.dir").getBytes());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        PipelineUtils.writeOutput(pipelineStage,System.getProperty("user.dir"));
         return true;
     }
 }

@@ -4,9 +4,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import commands.ShellUtils;
 import commands.StdErrFile;
 import commands.StdOutFile;
 import commands.UserInput;
@@ -121,28 +124,35 @@ public class InputProcessor {
     String command = "";
     String options = "";
 
-    // used to handle executable/command with names which starts with double quotes
-    if (input.startsWith("\"")) {
-      String regex = "\"([^\"]*)\"";
-      Matcher matcher = Pattern.compile(regex).matcher(input);
-      boolean hasMatch = matcher.find();
-      if (hasMatch) {
-          // group 0 is excluding double quotes
-        command = matcher.group(0);
-        options = input.substring(matcher.end()).trim();
+//    // used to handle executable/command with names which starts with double quotes
+//    if (input.startsWith("\"")) {
+//      String regex = "\"([^\"]*)\"";
+//      Matcher matcher = Pattern.compile(regex).matcher(input);
+//      boolean hasMatch = matcher.find();
+//      if (hasMatch) {
+//          // group 0 is excluding double quotes
+//        command = matcher.group(0);
+//        options = input.substring(matcher.end()).trim();
+//      }
+//    } else if (input.startsWith("'")) {
+//      String regex = "'([^']*)'"; // '([^']*?)'
+//      Matcher matcher = Pattern.compile(regex).matcher(input);
+//      boolean hasMatch = matcher.find();
+//      if (hasMatch) {
+//        command = matcher.group(0);
+//        options = input.substring(matcher.end()).trim();
+//      }
+//    } else {
+//      command = input.split(" ")[0];
+//      options = input.replaceFirst(Pattern.quote(command), "").trim();
+//    }
+
+      List<String> tokens = ShellUtils.tokenize(input);
+      if (tokens.isEmpty()) {
+          return new  CommandParts(command, options);
       }
-    } else if (input.startsWith("'")) {
-      String regex = "'([^']*)'"; // '([^']*?)'
-      Matcher matcher = Pattern.compile(regex).matcher(input);
-      boolean hasMatch = matcher.find();
-      if (hasMatch) {
-        command = matcher.group(0);
-        options = input.substring(matcher.end()).trim();
-      }
-    } else {
-      command = input.split(" ")[0];
-      options = input.replaceFirst(Pattern.quote(command), "").trim();
-    }
+      command = tokens.get(0);
+      options = tokens.size()>1 ? "" : String.join(" ",tokens.subList(1,tokens.size()));
     return new CommandParts(command, options);
   }
 }
