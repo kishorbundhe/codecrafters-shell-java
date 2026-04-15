@@ -18,6 +18,9 @@ public class PipelineUtils {
 
   public static void writeOutput(PipelineStage stage, String content, boolean newLine) {
     try {
+        if(content.isEmpty()) {
+            return;
+        }
       if (stage.getStdout() != null) {
         stage.getStdout().write(content.getBytes());
         if (newLine) {
