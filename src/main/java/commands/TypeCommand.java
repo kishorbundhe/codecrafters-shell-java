@@ -31,16 +31,16 @@ public class TypeCommand implements Command {
         
         for (ValidCommand validCommand : ValidCommand.values()) {
             if (validCommand.getCommand().equals(options)) {
-                PipelineUtils.writeOutput(pipelineStage, options + " is a shell builtin\n");
+                PipelineUtils.writeOutput(pipelineStage, options + " is a shell builtin\n",false);
                 return true;
             }
         }
 
         Pair<Boolean, Path> isCommandExecutableResult = Command.commandIsPresentAndExecutable(options);
         if (!isCommandExecutableResult.first()) {
-            PipelineUtils.writeOutput(pipelineStage, options + ": not found\n");
+            PipelineUtils.writeOutput(pipelineStage, options + ": not found\n",false);
         } else {
-            PipelineUtils.writeOutput(pipelineStage, options + " is " + isCommandExecutableResult.second() + "\n");
+            PipelineUtils.writeOutput(pipelineStage, options + " is " + isCommandExecutableResult.second() + "\n",false);
         }
         return true;
     }
