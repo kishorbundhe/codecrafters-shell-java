@@ -55,7 +55,8 @@ public class ShellUtils {
 
 
     public static String resolveQuotes(String input) {
-        return String.join(" ", tokenize(input));
+        List<String> tokenize = tokenize(input);
+        return String.join(" ", tokenize);
     }
 
     private static String unescapeUnquoted(String s) {

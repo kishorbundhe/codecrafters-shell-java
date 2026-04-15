@@ -26,6 +26,7 @@ public interface Command {
             boolean isDirectory = Files.isDirectory(dirPath);
             if (isDirectory) {
                 try {
+            
                     Optional<Path> foundPath = Files.list(dirPath)
                             .filter(file -> file.getFileName().toString().equals(finalCommand)
                                     && Files.isExecutable(file))

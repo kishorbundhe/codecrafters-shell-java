@@ -218,6 +218,8 @@ public class Main {
     String escapeCommand = ShellUtils.resolveQuotes(pipelineStage.getCommand());
     Pair<Boolean, Path> commandResult = commandIsPresentAndExecutable(escapeCommand);
     if (commandResult.first()) {
+      // Use the resolved full path for execution to handle special characters correctly
+      pipelineStage.setCommand(commandResult.second().toString());
       CustomExecutable customExecutable = new CustomExecutable();
       return customExecutable.execute(pipelineStage);
     }
@@ -234,7 +236,7 @@ public class Main {
       UserInput externalInput =
           new UserInput(
               userInput.userInput(),
-              path.getFileName().toString(),
+              path.toString(),
               userInput.options(),
               userInput.stdOutFile(),
               userInput.stdErrFile(),
