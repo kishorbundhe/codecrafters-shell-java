@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import InputProcessor.InputProcessor;
+import pipe.PipelineStage;
 
 public class CustomExecutable implements Command {
   @Override
@@ -19,7 +20,48 @@ public class CustomExecutable implements Command {
     return true;
   }
 
-  private List<ProcessBuilder> buildPipeBasedProcess(String unChangedInputFromUser) {
+  @Override
+  public boolean execute(PipelineStage pipelineStage) {
+    ProcessBuilder pb = build(pipelineStage);
+    executeNonPipeBasedCommand(pb);
+    return true;
+  }
+
+  public boolean execute(ProcessBuilder pb) {
+    executeNonPipeBasedCommand(pb);
+    return true;
+  }
+
+  public void execute(List<PipelineStage> pipelineStages) {
+    List<ProcessBuilder> processBuilders = new ArrayList<>();
+    for (PipelineStage pipelineStage : pipelineStages) {
+      processBuilders.add(build(pipelineStage));
+    }
+    executePipeBasedCommand(processBuilders);
+  }
+
+  public ProcessBuilder build(PipelineStage pipelineStage) {
+    List<String> args = prepareArguments(pipelineStage.getCommand(), pipelineStage.getOptions());
+    ProcessBuilder pb = new ProcessBuilder(args);
+    // Default to inheriting IO unless redirected
+    pb.inheritIO();
+
+    // Handle redirections from Main.java (Piping)
+    if (pipelineStage.getInputRedirect() != null) {
+      pb.redirectInput(pipelineStage.getInputRedirect());
+    }
+    // Handle explicit user-defined redirections (e.g. > or 2>)
+    if (pipelineStage.getOutputRedirect() != null) {
+      pb.redirectOutput(pipelineStage.getOutputRedirect());
+    }
+    // Handle explicit user-defined redirections for error
+    if (pipelineStage.getErrorRedirect() != null) {
+      pb.redirectError(pipelineStage.getErrorRedirect());
+    }
+    return pb;
+  }
+
+  public List<ProcessBuilder> buildPipeBasedProcess(String unChangedInputFromUser) {
     InputProcessor inputProcessor = new InputProcessor();
     String[] split = unChangedInputFromUser.split("\\|");
     List<String> commands = Arrays.stream(split).map(String::trim).toList();
@@ -30,6 +72,7 @@ public class CustomExecutable implements Command {
         .toList();
   }
 
+
   private ProcessBuilder buildNonPipeBasedProcess(UserInput userInput) {
     BuildProcessArguments bpa = getBuildProcessArguments(userInput);
     ProcessBuilder pb = new ProcessBuilder(bpa.args());
@@ -38,10 +81,8 @@ public class CustomExecutable implements Command {
     pb.inheritIO();
 
     // Handle redirections from Main.java (Piping)
-    if (userInput.inputFile() != null)
-      pb.redirectInput(userInput.inputFile());
-    if (userInput.outputfile() != null)
-      pb.redirectOutput(userInput.outputfile());
+    if (userInput.inputFile() != null) pb.redirectInput(userInput.inputFile());
+    if (userInput.outputfile() != null) pb.redirectOutput(userInput.outputfile());
 
     // Handle explicit user-defined redirections (e.g. > or 2>)
     if (bpa.stdFileName() != null && !bpa.stdFileName().isEmpty()) {
@@ -50,6 +91,7 @@ public class CustomExecutable implements Command {
               ? ProcessBuilder.Redirect.appendTo(new File(bpa.stdFileName()))
               : ProcessBuilder.Redirect.to(new File(bpa.stdFileName())));
     }
+    // Handle explicit user-defined redirections for error
     if (bpa.stdErrFileName() != null && !bpa.stdErrFileName().isEmpty()) {
       pb.redirectError(
           bpa.stdErrAppend()
@@ -96,8 +138,7 @@ public class CustomExecutable implements Command {
       boolean stdOutAppend,
       String stdErrFileName,
       boolean stdErrAppend,
-      List<String> args) {
-  }
+      List<String> args) {}
 
   private List<String> prepareArguments(String command, String options) {
     List<String> args = new ArrayList<>();

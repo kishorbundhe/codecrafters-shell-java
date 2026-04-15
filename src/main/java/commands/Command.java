@@ -1,5 +1,7 @@
 package commands;
 
+import pipe.PipelineStage;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +12,7 @@ import java.util.Optional;
 
 public interface Command {
     boolean execute(UserInput userInput);
+    boolean execute(PipelineStage pipelineStage);
 
     public static Pair<Boolean, Path> commandIsPresentAndExecutable(String command) {
         // get the env PATH variable and check if the command exists in any of the

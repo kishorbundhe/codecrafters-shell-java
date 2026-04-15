@@ -1,11 +1,16 @@
 package InputProcessor;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import commands.StdErrFile;
 import commands.StdOutFile;
 import commands.UserInput;
-import java.io.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import pipe.PipelineStage;
 
 public class InputProcessor {
 
@@ -22,6 +27,43 @@ public class InputProcessor {
         redirection.stdErr(),
         previousFile,
         currentOutput);
+  }
+
+
+  public PipelineStage parsePipelineStage(String inputFromPipeline) {
+      PipelineStage pipelineStage = new PipelineStage();
+      pipelineStage.setStdin(System.in);
+      pipelineStage.setStdout(System.out);
+      pipelineStage.setStderr(System.err);
+      RedirectionResult redirection = extractRedirectionInfo(inputFromPipeline);
+      StdOutFile stdOutFile = redirection.stdOut();
+      if (!stdOutFile.stdOutFile().isEmpty()) {
+          try {
+              FileOutputStream fos = new FileOutputStream(stdOutFile.stdOutFile(), stdOutFile.append());
+              pipelineStage.setStdout(fos);
+              pipelineStage.setOutputRedirect(stdOutFile.append()
+                      ? ProcessBuilder.Redirect.appendTo(new File(stdOutFile.stdOutFile()))
+                      : ProcessBuilder.Redirect.to(new File(stdOutFile.stdOutFile())));
+          } catch (FileNotFoundException e) {
+              e.printStackTrace();
+          }
+      }
+      StdErrFile stdErrFile = redirection.stdErr();
+      if (!stdErrFile.stdErrFile().isEmpty()) {
+          try {
+              FileOutputStream fos = new FileOutputStream(stdErrFile.stdErrFile(), stdErrFile.append());
+              pipelineStage.setStderr(fos);
+              pipelineStage.setErrorRedirect(stdErrFile.append()
+                      ? ProcessBuilder.Redirect.appendTo(new File(stdErrFile.stdErrFile()))
+                      : ProcessBuilder.Redirect.to(new File(stdErrFile.stdErrFile())));
+          } catch (FileNotFoundException e) {
+              e.printStackTrace();
+          }
+      }
+      CommandParts commandParts = parseCommandAndOptions(redirection.cleanedInput());
+      pipelineStage.setCommand(commandParts.command());
+      pipelineStage.setOptions(commandParts.options());
+      return pipelineStage;
   }
 
   private static RedirectionResult extractRedirectionInfo(String input) {
@@ -85,6 +127,7 @@ public class InputProcessor {
       Matcher matcher = Pattern.compile(regex).matcher(input);
       boolean hasMatch = matcher.find();
       if (hasMatch) {
+          // group 0 is excluding double quotes
         command = matcher.group(0);
         options = input.substring(matcher.end()).trim();
       }
