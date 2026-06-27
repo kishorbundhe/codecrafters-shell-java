@@ -84,47 +84,6 @@ public class Main {
         }
       }
       if (hasShellBuiltIns) {
-        //        List<String> pipedCommands =
-        //            Arrays.stream(inputFromUser.split("\\|")).map(String::trim).toList();
-        //        File previousOutput;
-        //        File currentOutput;
-        //        try {
-        //          Path previousTempFilePath = Paths.get("previousOutput.txt");
-        //          Path nextTempFilePath = Paths.get("nextOutput.txt");
-        //          if (Files.exists(previousTempFilePath)) {
-        //            Files.delete(previousTempFilePath);
-        //            Files.delete(nextTempFilePath);
-        //          }
-        //          previousOutput = Files.createFile(previousTempFilePath).toFile();
-        //          currentOutput = Files.createFile(nextTempFilePath).toFile();
-        //          FileOutputStream fos = new FileOutputStream(previousOutput, true);
-        //          System.setOut(new PrintStream(fos));
-        //        } catch (IOException e) {
-        //          throw new RuntimeException(e);
-        //        }
-        //
-        //        for (int index = 0; index < pipedCommands.size(); index++) {
-        //          UserInput userInput =
-        //              inputProcessor.parseUserInput(
-        //                  pipedCommands.get(index), previousOutput, currentOutput);
-        //
-        //          processUserCommand(userInput);
-        //
-        //          if (index == pipedCommands.size() - 1) {
-        //            System.setOut(console);
-        //            try {
-        //              List<String> readAllLines = Files.readAllLines(currentOutput.toPath());
-        //              if (readAllLines.isEmpty()) {
-        //                Files.readAllLines(previousOutput.toPath()).forEach(System.out::println);
-        //              } else {
-        //                readAllLines.forEach(System.out::println);
-        //              }
-        //            } catch (IOException e) {
-        //              throw new RuntimeException(e);
-        //            }
-        //          }
-        //        }
-        //        return true;
         String[] split = inputFromUser.split("\\|");
         List<PipelineStage> pipelineStages =
             Arrays.stream(split).map(String::trim).map(inputProcessor::parsePipelineStage).toList();
@@ -171,7 +130,8 @@ public class Main {
         }
         PipelineUtils.writeOutput(pipelineStages.getLast(), Files.readString(previous.toPath()),false);
         return true;
-      } else {
+      }
+      else {
         // process pipelines should have pipe redirects
         String[] split = inputFromUser.split("\\|");
         List<PipelineStage> pipelineStagesWithoutAnyShellBuiltIn =
