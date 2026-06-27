@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 public class ShellUtils {
     private static final String REGEX = "(?<!\\\\)\"((?:\\\\.|[^\"\\\\])*)\"(?!\\\\)|(?<!\\\\)'([^']*?)'(?!\\\\)";
     private static final Pattern PATTERN = Pattern.compile(REGEX);
-
+    // echo "example\"insidequotes"script\" - > output : "example"insidequotesscript""
     public static List<String> tokenize(String input) {
         List<String> tokens = new ArrayList<>();
         if (input == null || input.isBlank())
