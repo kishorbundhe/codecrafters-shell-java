@@ -142,13 +142,11 @@ public class CustomExecutable implements Command {
   public List<String> prepareArguments(String command, String options) {
     List<String> args = new ArrayList<>();
     args.add(command.trim());
-//    if (command.contains("cat")) {
-//      options = options.replace("\"", "\\\"");
-//    }
+
     if (options != null && !options.isBlank()) {
       List<String> tokenize = ShellUtils.resolveQuotesWithoutRegex(options);
       for (String token : tokenize) {
-        token = token.replace("\\", "/");
+          if(token.equals(" ")) {continue;}
         args.add(token);
       }
     }
