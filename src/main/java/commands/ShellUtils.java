@@ -5,6 +5,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/*Then apply the shell rules:
+whitespace ends a token only outside quotes
+quoted and unquoted text are appended to the same token
+inside double quotes, \" and \\ are escapes
+inside single quotes, everything is literal
+outside quotes, \x means literal x*/
+
 public class ShellUtils {
   private static final String REGEX =
       "(?<!\\\\)\"((?:\\\\.|[^\"\\\\])*)\"(?!\\\\)|(?<!\\\\)'([^']*?)'(?!\\\\)";
@@ -14,10 +21,13 @@ public class ShellUtils {
   public static List<String> tokenize(String input) {
     List<String> tokens = new ArrayList<>();
     if (input == null || input.isBlank()) return tokens;
+    // String processed = input.replace("\"\"", "").replace("''", "");
     StringBuilder sb = new StringBuilder(input);
 
     while (true) {
       Matcher matcher = PATTERN.matcher(sb.toString());
+
+      if (sb.isEmpty()) break;
       if (matcher.find()) {
         // Handle unquoted text before the match
         if (matcher.start() > 0) {
@@ -58,9 +68,58 @@ public class ShellUtils {
     return tokens;
   }
 
+  public static List<String> resolveQuotesWithoutRegex(String input) {
+    boolean insideDoubleQuotes = false;
+    boolean insideSingleQuotes = false;
+    boolean previousWasSpace = false;
+    List<String> tokens = new ArrayList<>();
+    StringBuilder sb = new StringBuilder();
+    char[] chars = input.toCharArray();
+    for (int i = 0; i < chars.length; i++) {
+      char aChar = chars[i];
+      if (aChar == '"' && !insideSingleQuotes) {
+        insideDoubleQuotes = !insideDoubleQuotes;
+      } else if (aChar == '\'' && !insideDoubleQuotes) {
+        insideSingleQuotes = !insideSingleQuotes;
+      } else if (!insideSingleQuotes
+          && aChar == '\\'
+          && (i + 1) < chars.length
+          && (chars[i + 1] == '"'
+              || chars[i + 1] == '\''
+              || chars[i + 1] == '\\'
+              || chars[i + 1] == ' '
+              || chars[i + 1] == '$'
+              || chars[i + 1] == '`')) { // just skip this
+        sb.append(chars[i + 1]);
+        i++;
+      } else if (!insideDoubleQuotes && !insideSingleQuotes && aChar == ' ') {
+        if (!previousWasSpace) {
+            tokens.add(sb.toString());
+            tokens.add(String.valueOf(aChar));
+            sb.delete(0, sb.length());
+          previousWasSpace = true;
+        }
+      } else if (previousWasSpace && aChar == ' ') {
+
+      } else {
+        sb.append(aChar);
+        previousWasSpace = false;
+      }
+    }
+    if(!sb.isEmpty()) {
+        tokens.add(sb.toString());
+    }
+    return tokens;
+  }
+
   public static String resolveQuotes(String input) {
-    List<String> tokenize = tokenize(input);
-    return String.join(" ", tokenize);
+
+      List<String> tokens = resolveQuotesWithoutRegex(input);
+      StringBuilder sb = new StringBuilder();
+      for(String string : tokens) {
+          sb.append(string);
+      }
+      return sb.toString();
   }
 
   private static String unescapeUnquoted(String s) {

@@ -72,7 +72,6 @@ public class CustomExecutable implements Command {
         .toList();
   }
 
-
   private ProcessBuilder buildNonPipeBasedProcess(UserInput userInput) {
     BuildProcessArguments bpa = getBuildProcessArguments(userInput);
     ProcessBuilder pb = new ProcessBuilder(bpa.args());
@@ -140,11 +139,18 @@ public class CustomExecutable implements Command {
       boolean stdErrAppend,
       List<String> args) {}
 
-  private List<String> prepareArguments(String command, String options) {
+  public List<String> prepareArguments(String command, String options) {
     List<String> args = new ArrayList<>();
-    args.add(command);
+    args.add(command.trim());
+//    if (command.contains("cat")) {
+//      options = options.replace("\"", "\\\"");
+//    }
     if (options != null && !options.isBlank()) {
-      args.addAll(ShellUtils.tokenize(options));
+      List<String> tokenize = ShellUtils.resolveQuotesWithoutRegex(options);
+      for (String token : tokenize) {
+        token = token.replace("\\", "/");
+        args.add(token);
+      }
     }
     return args;
   }
