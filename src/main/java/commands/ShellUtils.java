@@ -83,14 +83,7 @@ public class ShellUtils {
         insideSingleQuotes = !insideSingleQuotes;
       } else if (!insideSingleQuotes
           && aChar == '\\'
-          && (i + 1) < chars.length
-          && (chars[i + 1] == '"'
-              || chars[i + 1] == '\''
-              || chars[i + 1] == 'n'
-              || chars[i + 1] == '\\'
-              || chars[i + 1] == ' '
-              || chars[i + 1] == '$'
-              || chars[i + 1] == '`')) { // just skip this
+          && (i + 1) < chars.length) { // just skip this
         sb.append(chars[i + 1]);
         i++;
       } else if (!insideDoubleQuotes && !insideSingleQuotes && aChar == ' ') {

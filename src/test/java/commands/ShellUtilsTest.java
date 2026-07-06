@@ -135,9 +135,24 @@ class ShellUtilsTest {
     Assertions.assertEquals(
         "just'one'\\n'backslash", ShellUtils.resolveQuotes("\"just'one'\\\\n'backslash\""));
   }
+
   @Test
   void example3() {
-      Assertions.assertEquals("testnshell",ShellUtils.resolveQuotes("test\\nshell"));
+    Assertions.assertEquals("testnshell", ShellUtils.resolveQuotes("test\\nshell"));
+  }
+
+  @Test
+  void example4() {
+    Assertions.assertEquals("ignore_backslash", ShellUtils.resolveQuotes("ignore\\_backslash"));
+    Assertions.assertEquals("shell\\\\\\nscript", ShellUtils.resolveQuotes("'shell\\\\\\nscript'"));
+    Assertions.assertEquals("example\\\"test", ShellUtils.resolveQuotes("'example\\\"test'"));
+    Assertions.assertEquals(
+        "just'one'\\n'backslash", ShellUtils.resolveQuotes("\"just'one'\\\\n'backslash\""));
+    Assertions.assertEquals(
+        "multiple\\\\slashes", ShellUtils.resolveQuotes("'multiple\\\\slashes'"));
+    Assertions.assertEquals(
+        "every\\\"thing_is\\\"literal",
+            ShellUtils.resolveQuotes("'every\\\"thing_is\\\"literal'"));
   }
 
   @Test
