@@ -86,6 +86,7 @@ public class ShellUtils {
           && (i + 1) < chars.length
           && (chars[i + 1] == '"'
               || chars[i + 1] == '\''
+              || chars[i + 1] == 'n'
               || chars[i + 1] == '\\'
               || chars[i + 1] == ' '
               || chars[i + 1] == '$'

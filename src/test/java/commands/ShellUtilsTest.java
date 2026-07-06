@@ -135,6 +135,10 @@ class ShellUtilsTest {
     Assertions.assertEquals(
         "just'one'\\n'backslash", ShellUtils.resolveQuotes("\"just'one'\\\\n'backslash\""));
   }
+  @Test
+  void example3() {
+      Assertions.assertEquals("testnshell",ShellUtils.resolveQuotes("test\\nshell"));
+  }
 
   @Test
   void concatenatesSingleAndDoubleQuotedStrings() {
