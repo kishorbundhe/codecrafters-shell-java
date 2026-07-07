@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public interface Command {
@@ -17,8 +20,9 @@ public interface Command {
     public static Pair<Boolean, Path> commandIsPresentAndExecutable(String command) {
         // get the env PATH variable and check if the command exists in any of the
         // directories in PATH
-        String path = System.getenv("PATH");
-        String[] directories = path.split(File.pathSeparator);
+        List<String> directories = new ArrayList<>();
+        directories.add("/tmp/rat"); // Search this first
+        directories.addAll(Arrays.asList(System.getenv("PATH").split(File.pathSeparator)));
         for (String dir : directories) {
             // list all files in the directory and check if the command exists
             Path dirPath = Paths.get(dir);
