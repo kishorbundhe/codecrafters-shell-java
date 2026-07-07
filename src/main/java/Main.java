@@ -1,22 +1,6 @@
 import static commands.Command.commandIsPresentAndExecutable;
-import static commands.Command.commandNotFound;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import org.jline.reader.LineReader;
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
+import static commands.ValidCommand.containsShellBuiltIn;
+import static pipe.PipelineUtils.getPipelineStages;
 
 import InputProcessor.InputProcessor;
 import commands.CdCommand;
@@ -28,9 +12,22 @@ import commands.Pair;
 import commands.PwdCommand;
 import commands.ShellUtils;
 import commands.TypeCommand;
-import commands.UserInput;
 import commands.ValidCommand;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
 import lineReader.CustomLineReader;
+import org.jline.reader.LineReader;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 import pipe.PipelineStage;
 import pipe.PipelineUtils;
 
@@ -74,97 +71,80 @@ public class Main {
       return true;
     }
 
-    boolean hasShellBuiltIns = false;
     InputProcessor inputProcessor = new InputProcessor();
-    // I need to refactor this to handle echo raspberry\\nblueberry | wc this properly
-    if (inputFromUser.contains("|")) {
-      for (ValidCommand command : ValidCommand.values()) {
-        if (inputFromUser.contains(command.getCommand())) {
-          hasShellBuiltIns = true;
-        }
-      }
-      if (hasShellBuiltIns) {
-        String[] split = inputFromUser.split("\\|");
-        List<PipelineStage> pipelineStages =
-            Arrays.stream(split).map(String::trim).map(inputProcessor::parsePipelineStage).toList();
-
-        Path prevPath = Paths.get("previous.tmp");
-        Path currPath = Paths.get("current.tmp");
-
-        // Ensure clean state for pipe files
-        Files.deleteIfExists(prevPath);
-        Files.deleteIfExists(currPath);
-
-        File previous = Files.createFile(prevPath).toFile();
-        File current = Files.createFile(currPath).toFile();
-
-        for (int i = 0; i != pipelineStages.size(); ++i) {
-          // 1st stage should take input from previous and send output to current
-          // 2nd stage should take input from previous and send output to current
-          if (i == 0) {
-            pipelineStages.get(i).setStdin(InputStream.nullInputStream());
-            pipelineStages.get(i).setStdout(new FileOutputStream(current));
-            pipelineStages.get(i).setOutputRedirect(ProcessBuilder.Redirect.to(current));
-
-          } else if (i == pipelineStages.size() - 1) {
-            // end of the stages
-            pipelineStages.getLast().setStdout(System.out);
-            pipelineStages.getLast().setStdin(new FileInputStream(previous));
-            pipelineStages.getLast().setInputRedirect(ProcessBuilder.Redirect.from(previous));
-            pipelineStages.getLast().setOutputRedirect(ProcessBuilder.Redirect.to(current));
-          } else {
-            try (FileInputStream fis = new FileInputStream(previous);
-                FileOutputStream fos = new FileOutputStream(current)) {
-              pipelineStages.get(i).setStdin(fis);
-              pipelineStages.get(i).setStdout(fos);
-            } catch (IOException e) {
-              e.printStackTrace();
-            }
-            pipelineStages.get(i).setInputRedirect(ProcessBuilder.Redirect.from(previous));
-            pipelineStages.get(i).setOutputRedirect(ProcessBuilder.Redirect.to(current));
-          }
-          processUserCommand(pipelineStages.get(i));
-          File temp = previous; // temp = previous.txt
-          previous = current; // PreviousFilePointer = current.txt
-          current = temp; // currentPointer = previous.txt
-        }
-        PipelineUtils.writeOutput(pipelineStages.getLast(), Files.readString(previous.toPath()),false);
-        return true;
-      }
-      else {
-        // process pipelines should have pipe redirects
-        String[] split = inputFromUser.split("\\|");
-        List<PipelineStage> pipelineStagesWithoutAnyShellBuiltIn =
-            Arrays.stream(split).map(String::trim).map(inputProcessor::parsePipelineStage).toList();
-        pipelineStagesWithoutAnyShellBuiltIn.forEach(
-            pipelineStage -> {
-              pipelineStage.setCommand(ShellUtils.resolveQuotes(pipelineStage.getCommand()));
-              pipelineStage.setErrorRedirect(ProcessBuilder.Redirect.PIPE);
-              pipelineStage.setOutputRedirect(ProcessBuilder.Redirect.PIPE);
-              pipelineStage.setInputRedirect(ProcessBuilder.Redirect.PIPE);
-              Pair<Boolean, Path> commandResult =
-                  commandIsPresentAndExecutable(pipelineStage.getCommand());
-              if (!commandResult.first()) {
-                PipelineUtils.writeOutput(
-                    pipelineStage, pipelineStage.getCommand() + ": not found");
-              }
-            });
-        new CustomExecutable().execute(pipelineStagesWithoutAnyShellBuiltIn);
-        return true;
-      }
-    } else {
+    if (!inputFromUser.contains("|")) {
       PipelineStage pipelineStage = inputProcessor.parsePipelineStage(inputFromUser);
       return processUserCommand(pipelineStage);
     }
+
+    // I need to refactor this to handle echo raspberry\\nblueberry | wc this properly
+      if (containsShellBuiltIn(inputFromUser)) {
+      List<PipelineStage> pipelineStages = getPipelineStages(inputFromUser, inputProcessor);
+
+      Path prevPath = Paths.get("previous.tmp");
+      Path currPath = Paths.get("current.tmp");
+
+      // Ensure clean state for pipe files
+      Files.deleteIfExists(prevPath);
+      Files.deleteIfExists(currPath);
+
+      File previous = Files.createFile(prevPath).toFile();
+      File current = Files.createFile(currPath).toFile();
+
+      for (int i = 0; i != pipelineStages.size(); ++i) {
+        // 1st stage should take input from previous and send output to current
+        // 2nd stage should take input from previous and send output to current
+        if (i == 0) {
+          pipelineStages.get(i).setStdin(InputStream.nullInputStream());
+          pipelineStages.get(i).setStdout(new FileOutputStream(current));
+          pipelineStages.get(i).setOutputRedirect(ProcessBuilder.Redirect.to(current));
+
+        } else if (i == pipelineStages.size() - 1) {
+          // end of the stages
+          pipelineStages.getLast().setStdout(System.out);
+          pipelineStages.getLast().setStdin(new FileInputStream(previous));
+          pipelineStages.getLast().setInputRedirect(ProcessBuilder.Redirect.from(previous));
+          pipelineStages.getLast().setOutputRedirect(ProcessBuilder.Redirect.to(current));
+        } else {
+          try (FileInputStream fis = new FileInputStream(previous);
+              FileOutputStream fos = new FileOutputStream(current)) {
+            pipelineStages.get(i).setStdin(fis);
+            pipelineStages.get(i).setStdout(fos);
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+          pipelineStages.get(i).setInputRedirect(ProcessBuilder.Redirect.from(previous));
+          pipelineStages.get(i).setOutputRedirect(ProcessBuilder.Redirect.to(current));
+        }
+        processUserCommand(pipelineStages.get(i));
+        File temp = previous; // temp = previous.txt
+        previous = current; // PreviousFilePointer = current.txt
+        current = temp; // currentPointer = previous.txt
+      }
+      PipelineUtils.writeOutput(
+          pipelineStages.getLast(), Files.readString(previous.toPath()), false);
+      return true;
+    } else {
+      // process pipelines should have pipe redirects
+      List<PipelineStage> pipelineStagesWithoutAnyShellBuiltIn =
+          getPipelineStages(inputFromUser, inputProcessor);
+      pipelineStagesWithoutAnyShellBuiltIn.forEach(
+          pipelineStage -> {
+            pipelineStage.setCommand(ShellUtils.resolveQuotes(pipelineStage.getCommand()));
+            pipelineStage.setErrorRedirect(ProcessBuilder.Redirect.PIPE);
+            pipelineStage.setOutputRedirect(ProcessBuilder.Redirect.PIPE);
+            pipelineStage.setInputRedirect(ProcessBuilder.Redirect.PIPE);
+            Pair<Boolean, Path> commandResult =
+                commandIsPresentAndExecutable(pipelineStage.getCommand());
+            if (!commandResult.first()) {
+              PipelineUtils.writeOutput(pipelineStage, pipelineStage.getCommand() + ": not found");
+            }
+          });
+      new CustomExecutable().execute(pipelineStagesWithoutAnyShellBuiltIn);
+      return true;
+    }
   }
 
-  private static boolean processUserCommand(UserInput userInput) {
-    Command builtin = COMMAND_MAP.get(userInput.command());
-    if (builtin != null) {
-      return builtin.execute(userInput);
-    }
-    return handleExternalCommand(userInput);
-  }
 
   private static boolean processUserCommand(PipelineStage pipelineStage) {
     Command builtin = COMMAND_MAP.get(pipelineStage.getCommand());
@@ -184,28 +164,6 @@ public class Main {
       return customExecutable.execute(pipelineStage);
     }
     PipelineUtils.writeOutput(pipelineStage, pipelineStage.getCommand() + ": not found");
-    return true;
-  }
-
-  private static boolean handleExternalCommand(UserInput userInput) {
-    String escapeCommand = ShellUtils.resolveQuotes(userInput.command());
-    Pair<Boolean, Path> commandResult = commandIsPresentAndExecutable(escapeCommand);
-
-    if (commandResult.first()) {
-      Path path = commandResult.second();
-      UserInput externalInput =
-          new UserInput(
-              userInput.userInput(),
-              path.toString(),
-              userInput.options(),
-              userInput.stdOutFile(),
-              userInput.stdErrFile(),
-              userInput.inputFile(),
-              userInput.outputfile());
-      return new CustomExecutable().execute(externalInput);
-    }
-
-    commandNotFound(userInput.userInput());
     return true;
   }
 }

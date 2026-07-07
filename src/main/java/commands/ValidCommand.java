@@ -1,4 +1,5 @@
 package commands;
+
 public enum ValidCommand {
     EXIT("exit"),
     TYPE("type"),
@@ -20,6 +21,15 @@ public enum ValidCommand {
         for (ValidCommand validCommand : ValidCommand.values()) {
             if (validCommand.getCommand().equals(command)) {
                 System.out.println(command + " is a shell builtin");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean containsShellBuiltIn(String inputFromUser) {
+        for (ValidCommand command : ValidCommand.values()) {
+            if (inputFromUser.contains(command.getCommand())) {
                 return true;
             }
         }
