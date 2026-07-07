@@ -179,7 +179,7 @@ public class Main {
     Pair<Boolean, Path> commandResult = commandIsPresentAndExecutable(escapeCommand);
     if (commandResult.first()) {
       // Use the resolved full path for execution to handle special characters correctly
-      pipelineStage.setCommand(pipelineStage.getCommand());
+      pipelineStage.setCommand(commandResult.second().toString());
       CustomExecutable customExecutable = new CustomExecutable();
       return customExecutable.execute(pipelineStage);
     }
