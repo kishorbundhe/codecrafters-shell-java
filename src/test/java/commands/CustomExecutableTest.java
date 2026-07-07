@@ -24,7 +24,7 @@ class CustomExecutableTest {
   @Test
   void example1() {
     String options = "/tmp/rat/\"number 1\"";
-    System.out.println(ShellUtils.resolveQuotesWithoutRegex(options));
+    // System.out.println(ShellUtils.resolveQuotesWithoutRegex(options));
     Assertions.assertEquals(ShellUtils.resolveQuotesWithoutRegex(options).size(), 1);
   }
 

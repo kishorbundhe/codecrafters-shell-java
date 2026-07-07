@@ -151,8 +151,7 @@ class ShellUtilsTest {
     Assertions.assertEquals(
         "multiple\\\\slashes", ShellUtils.resolveQuotes("'multiple\\\\slashes'"));
     Assertions.assertEquals(
-        "every\\\"thing_is\\\"literal",
-            ShellUtils.resolveQuotes("'every\\\"thing_is\\\"literal'"));
+        "every\\\"thing_is\\\"literal", ShellUtils.resolveQuotes("'every\\\"thing_is\\\"literal'"));
   }
 
   @Test
@@ -198,7 +197,7 @@ class ShellUtilsTest {
     String str = "/tmp/\"doublequote \\\" 2\" ";
     String escaped = str.translateEscapes();
     str = str.replace("\"", "\\\"");
-    System.out.println(escaped);
-    System.out.println(str);
+    // System.out.println(escaped);
+    // System.out.println(str);
   }
 }
