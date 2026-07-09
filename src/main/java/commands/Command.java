@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface Command {
-    boolean execute(UserInput userInput);
     boolean execute(PipelineStage pipelineStage);
 
     public static Pair<Boolean, Path> commandIsPresentAndExecutable(String command) {

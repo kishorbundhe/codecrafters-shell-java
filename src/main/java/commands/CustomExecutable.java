@@ -10,15 +10,7 @@ import InputProcessor.InputProcessor;
 import pipe.PipelineStage;
 
 public class CustomExecutable implements Command {
-  @Override
-  public boolean execute(UserInput userInput) {
-    if (userInput.userInput().contains("|")) {
-      executePipeBasedCommand(buildPipeBasedProcess(userInput.userInput()));
-    } else {
-      executeNonPipeBasedCommand(buildNonPipeBasedProcess(userInput));
-    }
-    return true;
-  }
+
 
   @Override
   public boolean execute(PipelineStage pipelineStage) {
