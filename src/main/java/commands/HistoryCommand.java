@@ -12,7 +12,9 @@ public class HistoryCommand implements Command {
 
   @Override
   public boolean execute(PipelineStage pipelineStage) {
-    for (int i = 0; i < history.size(); i++) {
+    int n = history.size();
+    if (!pipelineStage.getOptions().isEmpty()) n = Integer.parseInt(pipelineStage.getOptions());
+    for (int i = 0; i < n; i++) {
       PipelineUtils.writeOutput(pipelineStage, i + 1 + " " + history.get(i), true);
     }
     return true;
