@@ -43,6 +43,15 @@ public class CustomLineReader {
                 .option(LineReader.Option.MENU_COMPLETE, true) // Cycle through completions
                 .build();
 
+        Widget customTabWidget = getTabWidget(terminal, lineReader, dynamicCompleter, tabCount);
+        lineReader.getWidgets().put("customtab-widget", customTabWidget);
+        KeyMap<Binding> keyMap = lineReader.getKeyMaps().get(LineReader.MAIN);
+        keyMap.bind(customTabWidget, "\t");
+
+        return lineReader;
+    }
+
+    private static Widget getTabWidget(Terminal terminal, LineReader lineReader, Completer dynamicCompleter, AtomicInteger tabCount) {
         Widget customTabWidget = () -> {
             boolean istab = lineReader.getLastBinding().equals("\t");
             List<Candidate> candidates = new ArrayList<>();
@@ -87,11 +96,7 @@ public class CustomLineReader {
             }
             return true;
         };
-        lineReader.getWidgets().put("customtab-widget", customTabWidget);
-        KeyMap<Binding> keyMap = lineReader.getKeyMaps().get(LineReader.MAIN);
-        keyMap.bind(customTabWidget, "\t");
-
-        return lineReader;
+        return customTabWidget;
     }
 
     private static Collection<String> getCurrentCommands() {
