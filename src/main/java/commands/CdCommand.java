@@ -9,27 +9,6 @@ import pipe.PipelineUtils;
 public class CdCommand implements Command {
 
   @Override
-  public boolean execute(UserInput userInput) {
-    String options = userInput.options();
-    Path newPath;
-    if (options.equalsIgnoreCase("~")) {
-      newPath = Path.of(System.getenv("HOME"));
-      cdToPath(null, newPath);
-      return true;
-    }
-    newPath = Path.of(options);
-    if (newPath.isAbsolute()) {
-      newPath = newPath.resolve(options).normalize();
-    } else {
-      // relative
-      Path path = Path.of(System.getProperty("user.dir")).resolve(newPath);
-      newPath = path.normalize();
-    }
-    cdToPath(options, newPath);
-    return true;
-  }
-
-  @Override
   public boolean execute(PipelineStage pipelineStage) {
     String options = pipelineStage.getOptions();
     Path newPath;

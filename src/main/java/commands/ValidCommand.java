@@ -5,7 +5,8 @@ public enum ValidCommand {
     TYPE("type"),
     PWD("pwd"),
     CD("cd"),
-    ECHO("echo");
+    ECHO("echo"),
+    HISTORY("history");
 
     private final String command;
 

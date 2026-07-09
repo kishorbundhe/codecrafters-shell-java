@@ -3,16 +3,7 @@ import static commands.ValidCommand.containsShellBuiltIn;
 import static pipe.PipelineUtils.getPipelineStages;
 
 import InputProcessor.InputProcessor;
-import commands.CdCommand;
-import commands.Command;
-import commands.CustomExecutable;
-import commands.EchoComand;
-import commands.ExitCommand;
-import commands.Pair;
-import commands.PwdCommand;
-import commands.ShellUtils;
-import commands.TypeCommand;
-import commands.ValidCommand;
+import commands.*;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -35,7 +26,8 @@ public class Main {
           ValidCommand.CD.getCommand(), new CdCommand(),
           ValidCommand.TYPE.getCommand(), new TypeCommand(),
           ValidCommand.EXIT.getCommand(), new ExitCommand(),
-          ValidCommand.ECHO.getCommand(), new EchoComand());
+          ValidCommand.ECHO.getCommand(), new EchoComand(),
+          ValidCommand.HISTORY.getCommand(), new HistoryCommand());
 
   public static void main(String[] args) throws Exception {
 
