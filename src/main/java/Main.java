@@ -58,6 +58,7 @@ public class Main {
     if (inputFromUser.isBlank()) {
       return true;
     }
+    HistoryCommand.add(inputFromUser);
 
     InputProcessor inputProcessor = new InputProcessor();
     if (!inputFromUser.contains("|")) {

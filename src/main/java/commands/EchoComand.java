@@ -10,16 +10,4 @@ public class EchoComand implements Command {
         PipelineUtils.writeOutput(pipelineStage, escapeOptions);
         return true;
     }
-
-    private static UserInput prepareEchoInput(UserInput userInput) {
-    String escapeOptions = ShellUtils.resolveQuotes(userInput.options());
-    return new UserInput(
-        "",
-        userInput.command(),
-        escapeOptions,
-        userInput.stdOutFile(),
-        userInput.stdErrFile(),
-        userInput.inputFile(),
-        userInput.outputfile());
-  }
 }
