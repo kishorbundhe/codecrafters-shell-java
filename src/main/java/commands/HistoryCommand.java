@@ -13,7 +13,21 @@ public class HistoryCommand implements Command {
   @Override
   public boolean execute(PipelineStage pipelineStage) {
     int n = history.size();
-    if (!pipelineStage.getOptions().isEmpty()) n = Integer.parseInt(pipelineStage.getOptions());
+    try {
+      n = Integer.parseInt(pipelineStage.getOptions());
+    } catch (Exception e) {
+    }
+    // 10 , n= 2   9th and 10th
+    if (!pipelineStage.getOptions().isEmpty() && n < history.size()) {
+      for (int i = 0; i < n; i++) {
+        // reverse order printing
+        PipelineUtils.writeOutput(
+            pipelineStage,
+            (history.size() + 1 - n) + i + " " + history.get(history.size() - n + i),
+            true);
+      }
+      return true;
+    }
     for (int i = 0; i < n; i++) {
       PipelineUtils.writeOutput(pipelineStage, i + 1 + " " + history.get(i), true);
     }
