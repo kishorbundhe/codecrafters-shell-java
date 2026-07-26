@@ -16,13 +16,9 @@ import java.util.stream.Collectors;
 
 import commands.ValidCommand;
 import org.jline.keymap.KeyMap;
-import org.jline.reader.Binding;
-import org.jline.reader.Candidate;
-import org.jline.reader.Completer;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.reader.Widget;
+import org.jline.reader.*;
 import org.jline.reader.impl.completer.StringsCompleter;
+import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.Terminal;
 
 public class CustomLineReader {
@@ -31,10 +27,12 @@ public class CustomLineReader {
         Collection<String> dynamicStrings = getCurrentCommands();
         Completer dynamicCompleter = new StringsCompleter(dynamicStrings);
         AtomicInteger tabCount = new AtomicInteger(0);
+        History history = new DefaultHistory();
         LineReader lineReader = LineReaderBuilder.builder()
                 .terminal(terminal)
                 .parser(new DisableEscapingChars())
                 .completer(dynamicCompleter)
+                .history(history)
                 .variable(BELL_STYLE, "audible")
                 .variable(TAB_WIDTH, 2)
                 .option(LineReader.Option.AUTO_LIST, true) // Automatically list options+

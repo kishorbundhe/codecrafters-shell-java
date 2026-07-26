@@ -4,7 +4,6 @@ import static pipe.PipelineUtils.getPipelineStages;
 
 import InputProcessor.InputProcessor;
 import commands.*;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,6 +32,7 @@ public class Main {
 
     try {
       Terminal terminal = TerminalBuilder.terminal();
+
       LineReader reader = CustomLineReader.configureLineReader(terminal);
 
       final PrintStream console = System.out;
