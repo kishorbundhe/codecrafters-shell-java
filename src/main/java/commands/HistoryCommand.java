@@ -1,6 +1,5 @@
 package commands;
 
-import org.jline.reader.History;
 import pipe.PipelineStage;
 import pipe.PipelineUtils;
 
@@ -18,13 +17,27 @@ public class HistoryCommand implements Command {
 
   private static final ArrayList<String> history = new ArrayList<>();
 
+  private static final ArrayList<HistoryOptionSupport> options = new ArrayList<>();
+
+  public HistoryCommand() {
+    options.add(new HistoryRCommandSupport());
+    options.add(new HistoryWCommandSupport());
+  }
+
   @Override
   public boolean execute(PipelineStage pipelineStage) {
-    if (!pipelineStage.getOptions().isEmpty() && pipelineStage.getOptions().contains("-r")) {
-      if (readFromFile(pipelineStage)) return true;
-    }
-    if (!pipelineStage.getOptions().isEmpty() && pipelineStage.getOptions().contains("-w")) {
-      if (writeToFile(pipelineStage)) return true;
+    //    if (!pipelineStage.getOptions().isEmpty() && pipelineStage.getOptions().contains("-r")) {
+    //      return readFromFile(pipelineStage);
+    //    }
+    //    if (!pipelineStage.getOptions().isEmpty() && pipelineStage.getOptions().contains("-w")) {
+    //      return writeToFile(pipelineStage);
+    //    }
+    //    if (!pipelineStage.getOptions().isEmpty() && pipelineStage.getOptions().contains("-a")) {
+    //      return appendToFile(pipelineStage);
+    //    }
+    if (!pipelineStage.getOptions().isEmpty()) {
+      options.forEach(option -> option.execute(pipelineStage, history));
+      return true;
     }
 
     int n = history.size();
@@ -49,15 +62,22 @@ public class HistoryCommand implements Command {
     return true;
   }
 
+  private boolean appendToFile(PipelineStage pipelineStage) {
+    return false;
+  }
+
   private boolean writeToFile(PipelineStage pipelineStage) {
     String[] temp = pipelineStage.getOptions().split(" ");
     String path = temp[1];
     try {
-        File file = Files.createFile(Path.of(path)).toFile();
-        for(String str : history){
-            Files.write(Path.of(file.getAbsolutePath()), str.getBytes(), StandardOpenOption.APPEND);
-            Files.write(Path.of(file.getAbsolutePath()), System.lineSeparator().getBytes(), StandardOpenOption.APPEND);
-        }
+      File file = Files.createFile(Path.of(path)).toFile();
+      for (String str : history) {
+        Files.write(Path.of(file.getAbsolutePath()), str.getBytes(), StandardOpenOption.APPEND);
+        Files.write(
+            Path.of(file.getAbsolutePath()),
+            System.lineSeparator().getBytes(),
+            StandardOpenOption.APPEND);
+      }
     } catch (IOException e) {
       // ignore
     }
@@ -85,5 +105,54 @@ public class HistoryCommand implements Command {
 
   public static void removeEntry(String userInput) {
     history.remove(userInput);
+  }
+}
+
+interface HistoryOptionSupport {
+  boolean execute(PipelineStage stage, ArrayList<String> history);
+}
+
+class HistoryRCommandSupport implements HistoryOptionSupport {
+
+  @Override
+  public boolean execute(PipelineStage stage, ArrayList<String> history) {
+    boolean isRoption = stage.getOptions().contains("-r");
+    if (!isRoption) {
+      return false;
+    } else {
+      String[] temp = stage.getOptions().split(" ");
+      String path = temp[1];
+      try {
+        lines(Path.of(path)).forEach(history::add);
+      } catch (IOException e) {
+        // ignore
+      }
+    }
+    return true;
+  }
+}
+
+class HistoryWCommandSupport implements HistoryOptionSupport {
+  @Override
+  public boolean execute(PipelineStage stage, ArrayList<String> history) {
+    boolean isWoption = stage.getOptions().contains("-w");
+    if (!isWoption) return false;
+    else {
+      String[] temp = stage.getOptions().split(" ");
+      String path = temp[1];
+      try {
+        File file = Files.createFile(Path.of(path)).toFile();
+        for (String str : history) {
+          Files.write(Path.of(file.getAbsolutePath()), str.getBytes(), StandardOpenOption.APPEND);
+          Files.write(
+              Path.of(file.getAbsolutePath()),
+              System.lineSeparator().getBytes(),
+              StandardOpenOption.APPEND);
+        }
+      } catch (IOException e) {
+        // ignore
+      }
+    }
+    return true;
   }
 }
