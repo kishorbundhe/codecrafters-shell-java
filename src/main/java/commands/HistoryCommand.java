@@ -4,12 +4,15 @@ import org.jline.reader.History;
 import pipe.PipelineStage;
 import pipe.PipelineUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 
 import static java.nio.file.Files.lines;
+import static java.nio.file.Files.write;
 
 public class HistoryCommand implements Command {
 
@@ -18,7 +21,10 @@ public class HistoryCommand implements Command {
   @Override
   public boolean execute(PipelineStage pipelineStage) {
     if (!pipelineStage.getOptions().isEmpty() && pipelineStage.getOptions().contains("-r")) {
-        if (readFromFile(pipelineStage)) return true;
+      if (readFromFile(pipelineStage)) return true;
+    }
+    if (!pipelineStage.getOptions().isEmpty() && pipelineStage.getOptions().contains("-w")) {
+      if (writeToFile(pipelineStage)) return true;
     }
 
     int n = history.size();
@@ -43,19 +49,34 @@ public class HistoryCommand implements Command {
     return true;
   }
 
-    private static boolean readFromFile(PipelineStage pipelineStage) {
-        String[] temp = pipelineStage.getOptions().split(" ");
-        String path = temp[1];
-        try {
-            lines(Path.of(path)).forEach(history::add);
-            return true;
-        } catch (IOException e) {
-           // ignore
+  private boolean writeToFile(PipelineStage pipelineStage) {
+    String[] temp = pipelineStage.getOptions().split(" ");
+    String path = temp[1];
+    try {
+        File file = Files.createFile(Path.of(path)).toFile();
+        for(String str : history){
+            Files.write(Path.of(file.getAbsolutePath()), str.getBytes(), StandardOpenOption.APPEND);
+            Files.write(Path.of(file.getAbsolutePath()), System.lineSeparator().getBytes(), StandardOpenOption.APPEND);
         }
-        return false;
+        Files.write(Path.of(path), "\n".getBytes(), StandardOpenOption.APPEND);
+    } catch (IOException e) {
+      // ignore
     }
+    return true;
+  }
 
-    public static void add(String userInput) {
+  private static boolean readFromFile(PipelineStage pipelineStage) {
+    String[] temp = pipelineStage.getOptions().split(" ");
+    String path = temp[1];
+    try {
+      lines(Path.of(path)).forEach(history::add);
+    } catch (IOException e) {
+      // ignore
+    }
+    return true;
+  }
+
+  public static void add(String userInput) {
     if (!userInput.isEmpty()) history.add(userInput.trim());
   }
 
