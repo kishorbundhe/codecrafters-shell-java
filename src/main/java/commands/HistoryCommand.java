@@ -18,14 +18,7 @@ public class HistoryCommand implements Command {
   @Override
   public boolean execute(PipelineStage pipelineStage) {
     if (!pipelineStage.getOptions().isEmpty() && pipelineStage.getOptions().contains("-r")) {
-      String[] temp = pipelineStage.getOptions().split(" ");
-      String path = temp[1];
-        try {
-            lines(Path.of(path)).forEach(history::add);
-            return true;
-        } catch (IOException e) {
-           // ignore
-        }
+        if (readFromFile(pipelineStage)) return true;
     }
 
     int n = history.size();
@@ -50,7 +43,19 @@ public class HistoryCommand implements Command {
     return true;
   }
 
-  public static void add(String userInput) {
+    private static boolean readFromFile(PipelineStage pipelineStage) {
+        String[] temp = pipelineStage.getOptions().split(" ");
+        String path = temp[1];
+        try {
+            lines(Path.of(path)).forEach(history::add);
+            return true;
+        } catch (IOException e) {
+           // ignore
+        }
+        return false;
+    }
+
+    public static void add(String userInput) {
     if (!userInput.isEmpty()) history.add(userInput.trim());
   }
 
