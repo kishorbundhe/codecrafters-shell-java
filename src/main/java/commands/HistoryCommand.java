@@ -58,7 +58,6 @@ public class HistoryCommand implements Command {
             Files.write(Path.of(file.getAbsolutePath()), str.getBytes(), StandardOpenOption.APPEND);
             Files.write(Path.of(file.getAbsolutePath()), System.lineSeparator().getBytes(), StandardOpenOption.APPEND);
         }
-        Files.write(Path.of(path), "\n".getBytes(), StandardOpenOption.APPEND);
     } catch (IOException e) {
       // ignore
     }
