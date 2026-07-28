@@ -22,6 +22,7 @@ public class HistoryCommand implements Command {
       String path = temp[1];
         try {
             lines(Path.of(path)).forEach(history::add);
+            return true;
         } catch (IOException e) {
            // ignore
         }
