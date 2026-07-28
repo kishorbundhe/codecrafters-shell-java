@@ -4,7 +4,12 @@ import org.jline.reader.History;
 import pipe.PipelineStage;
 import pipe.PipelineUtils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+
+import static java.nio.file.Files.lines;
 
 public class HistoryCommand implements Command {
 
@@ -12,6 +17,16 @@ public class HistoryCommand implements Command {
 
   @Override
   public boolean execute(PipelineStage pipelineStage) {
+    if (!pipelineStage.getOptions().isEmpty() && pipelineStage.getOptions().contains("-r")) {
+      String[] temp = pipelineStage.getOptions().split(" ");
+      String path = temp[1];
+        try {
+            lines(Path.of(path)).forEach(history::add);
+        } catch (IOException e) {
+           // ignore
+        }
+    }
+
     int n = history.size();
     try {
       n = Integer.parseInt(pipelineStage.getOptions());
