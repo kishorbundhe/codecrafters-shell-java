@@ -156,3 +156,11 @@ class HistoryWCommandSupport implements HistoryOptionSupport {
     return true;
   }
 }
+
+class HistoryACommandSupport implements HistoryOptionSupport {
+
+    @Override
+    public boolean execute(PipelineStage stage, ArrayList<String> history) {
+        return false;
+    }
+}
