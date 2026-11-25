@@ -170,8 +170,11 @@ class HistoryACommandSupport implements HistoryOptionSupport {
       String path = temp[1];
       try {
         File file;
-        Files.deleteIfExists(Path.of(path));
-        file = Files.createFile(Path.of(path)).toFile();
+        if(Files.exists(Path.of(path))) {
+            file = Path.of(path).toFile();
+        }  else {
+            file = Files.createFile(Path.of(path)).toFile();
+        }
         ArrayList<String> copyOfHistory = new ArrayList<>();
         Iterator<String> iterator = history.reversed().iterator();
         int counter = 0;
