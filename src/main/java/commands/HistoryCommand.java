@@ -1,7 +1,6 @@
 package commands;
 
-import pipe.PipelineStage;
-import pipe.PipelineUtils;
+import static java.nio.file.Files.lines;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,9 +9,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Iterator;
-
-import static java.nio.file.Files.lines;
-import static java.nio.file.Files.write;
+import pipe.PipelineStage;
+import pipe.PipelineUtils;
 
 public class HistoryCommand implements Command {
 
@@ -24,19 +22,11 @@ public class HistoryCommand implements Command {
     options.add(new HistoryRCommandSupport());
     options.add(new HistoryWCommandSupport());
     options.add(new HistoryACommandSupport());
+    options.add(new HistoryNCommandSupport());
   }
 
   @Override
   public boolean execute(PipelineStage pipelineStage) {
-    //    if (!pipelineStage.getOptions().isEmpty() && pipelineStage.getOptions().contains("-r")) {
-    //      return readFromFile(pipelineStage);
-    //    }
-    //    if (!pipelineStage.getOptions().isEmpty() && pipelineStage.getOptions().contains("-w")) {
-    //      return writeToFile(pipelineStage);
-    //    }
-    //    if (!pipelineStage.getOptions().isEmpty() && pipelineStage.getOptions().contains("-a")) {
-    //      return appendToFile(pipelineStage);
-    //    }
     if (!pipelineStage.getOptions().isEmpty()) {
       options.forEach(option -> option.execute(pipelineStage, history));
       return true;
@@ -58,6 +48,7 @@ public class HistoryCommand implements Command {
       }
       return true;
     }
+
     for (int i = 0; i < n; i++) {
       PipelineUtils.writeOutput(pipelineStage, i + 1 + " " + history.get(i), true);
     }
@@ -112,6 +103,34 @@ public class HistoryCommand implements Command {
 
 interface HistoryOptionSupport {
   boolean execute(PipelineStage stage, ArrayList<String> history);
+}
+
+class HistoryNCommandSupport implements HistoryOptionSupport {
+
+  @Override
+  public boolean execute(PipelineStage stage, ArrayList<String> history) {
+    try {
+      int n = Integer.parseInt(stage.getOptions());
+      if (!stage.getOptions().isEmpty() && n < history.size()) {
+        for (int i = 0; i < n; i++) {
+          // reverse order printing
+          PipelineUtils.writeOutput(
+              stage,
+              ((history.size() + 1 - n) + i + " " + history.get(history.size() - n + i)),
+              true);
+        }
+        return true;
+      }
+
+      for (int i = 0; i < n; i++) {
+        PipelineUtils.writeOutput(stage, (i + 1 + " " + history.get(i)), true);
+      }
+
+    } catch (NumberFormatException e) {
+      return false;
+    }
+    return true;
+  }
 }
 
 class HistoryRCommandSupport implements HistoryOptionSupport {
@@ -170,17 +189,17 @@ class HistoryACommandSupport implements HistoryOptionSupport {
       String path = temp[1];
       try {
         File file;
-        if(Files.exists(Path.of(path))) {
-            file = Path.of(path).toFile();
-        }  else {
-            file = Files.createFile(Path.of(path)).toFile();
+        if (Files.exists(Path.of(path))) {
+          file = Path.of(path).toFile();
+        } else {
+          file = Files.createFile(Path.of(path)).toFile();
         }
         ArrayList<String> copyOfHistory = new ArrayList<>();
         Iterator<String> iterator = history.reversed().iterator();
         int counter = 0;
         while (iterator.hasNext()) {
-            String next = iterator.next();
-            if (next.contains("history -a")) counter++;
+          String next = iterator.next();
+          if (next.contains("history -a")) counter++;
           if (counter < 2) {
             copyOfHistory.add(next);
           } else {
