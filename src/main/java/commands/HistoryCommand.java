@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import static java.nio.file.Files.lines;
 import static java.nio.file.Files.write;
@@ -22,6 +23,7 @@ public class HistoryCommand implements Command {
   public HistoryCommand() {
     options.add(new HistoryRCommandSupport());
     options.add(new HistoryWCommandSupport());
+    options.add(new HistoryACommandSupport());
   }
 
   @Override
@@ -159,8 +161,40 @@ class HistoryWCommandSupport implements HistoryOptionSupport {
 
 class HistoryACommandSupport implements HistoryOptionSupport {
 
-    @Override
-    public boolean execute(PipelineStage stage, ArrayList<String> history) {
-        return false;
+  @Override
+  public boolean execute(PipelineStage stage, ArrayList<String> history) {
+    boolean isAoption = stage.getOptions().contains("-a");
+    if (!isAoption) return false;
+    else {
+      String[] temp = stage.getOptions().split(" ");
+      String path = temp[1];
+      try {
+        File file;
+        Files.deleteIfExists(Path.of(path));
+        file = Files.createFile(Path.of(path)).toFile();
+        ArrayList<String> copyOfHistory = new ArrayList<>();
+        Iterator<String> iterator = history.reversed().iterator();
+        int counter = 0;
+        while (iterator.hasNext()) {
+            String next = iterator.next();
+            if (next.contains("history -a")) counter++;
+          if (counter < 2) {
+            copyOfHistory.add(next);
+          } else {
+            break;
+          }
+        }
+        for (String str : copyOfHistory.reversed()) {
+          Files.write(Path.of(file.getAbsolutePath()), str.getBytes(), StandardOpenOption.APPEND);
+          Files.write(
+              Path.of(file.getAbsolutePath()),
+              System.lineSeparator().getBytes(),
+              StandardOpenOption.APPEND);
+        }
+      } catch (IOException e) {
+        System.out.println(e.fillInStackTrace().toString());
+      }
     }
+    return false;
+  }
 }
